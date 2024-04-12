@@ -1,54 +1,73 @@
 from datetime import datetime
-import data
+import time
+import requests
+import LineNotifi as line
+time_data = []
 
-time_ranges = []
+def getTime(select):
+    try:
+        response_cat = requests.get('http://localhost:3000/catinformation')
+        if response_cat.status_code == 200:
+            # รับข้อมูลทั้งหมดจาก API
+            cats = response_cat.json()  # รับข้อมูลทั้งหมดจาก API
+            for cat in cats:
+                current_time = datetime.now().time()
+                if cat['id_cat'] == select:
+                    name = cat['name_cat']
+                    food_give = cat['food_give']
+                    id_tank = cat['id_tank']
+                    #เวลาที่ 1,2,3 และ สถานะ
+                    time_data = [
+                        {'start': datetime.strptime(cat['time1_start'], "%H:%M:%S").time(),
+                        'end': datetime.strptime(cat['time1_end'], "%H:%M:%S").time(),
+                        'status': cat['time1_status']},
 
-def getTime():
-    data = data.fetch_data_from_api()
-    print(data)
+                        {'start': datetime.strptime(cat['time2_start'], "%H:%M:%S").time(),
+                        'end': datetime.strptime(cat['time2_end'], "%H:%M:%S").time(),
+                        'status': cat['time2_status']},
 
-    time1_start = datetime.strptime("08:17", "%H:%M")
-    time1_end = datetime.strptime("08:17", "%H:%M")
-    time2_start = datetime.strptime("08:17", "%H:%M")
-    time2_end = datetime.strptime("08:17", "%H:%M")
-    time3_start = datetime.strptime("08:17", "%H:%M")
-    time3_end = datetime.strptime("08:17", "%H:%M")
+                        {'start': datetime.strptime(cat['time3_start'], "%H:%M:%S").time(),
+                        'end': datetime.strptime(cat['time3_end'], "%H:%M:%S").time(),
+                        'status': cat['time3_status']}
+                    ]
+                    ### loop เก็บค่าเวลาและสถานะการกิน
+                    for idx, data in enumerate(time_data):
+                        start_time = data['start']
+                        end_time = data['end']
+                        status = data['status']
 
-    time_ranges.append((
-        time1_start, time1_end,
-        time2_start, time2_end,
-        time3_start, time3_end,
-    ))
+                        print(current_time)
+                        ### เช็คสถานะเวลาและการกินว่ากินไปหรือยัง ถ้ายังให้ทำอะไรก็ได้และตั้งค่าสถานะว่ากินไปแล้ว ###
+                        if start_time <= current_time <= end_time and not status:
+                            print("here")
+                            ### process more ###
+                            times = idx + 1
+                            print(f"Processed ID {select} for time {times}")
+                            requests.get(f'http://localhost:3000/setstatus?id={select}&time={times}&status={True}')
 
-    processed_status = {
-        (time_range, id): False for time_range in time_ranges for id in range(1, 5)
-    }
+                            ### แจ้งเตือนไลน์ ###
+                            responseToken = requests.get('http://localhost:3000/notification')
+                            try:
+                                if responseToken.status_code == 200:  
+                                    datas = responseToken.json()
+                                    for data in datas:
+                                        token = data['token']
+                                else:
+                                    print('Error:', responseToken.text)
+                            except Exception as e:
+                                print('Error occurred while processing responseToken:', e)
 
-def runTime():
-    while True:
-        current_time = datetime.now().strftime("%H:%M")  # เวลาปัจจุบันในรูปแบบ HH:MM
-        received_time = datetime.strptime(current_time, "%H:%M")  # แปลงสตริงเวลาเป็น datetime object
-        has_processed = False
+                            line.sendCatEat(token, name)
+                            ### แจ้งเตือนไลน์ ###
 
-        print(current_time)
+                        else:
+                            print("none")
+        else:
+            print('Error:', response_cat.text)
+    except Exception as e:
+        print('Error occurred while processing responseCat:', e)
 
-        id_input = int(input("Enter ID (1-4): "))
-
-        for index, (start_time, end_time) in enumerate(time_ranges):
-            if start_time <= received_time <= end_time:
-                if not processed_status[((start_time, end_time), id_input)]:
-                    processed_status[((start_time, end_time), id_input)] = True
-                    print(f"process ID {id_input}")
-                    has_processed = True
-                else:
-                    print(f"ID {id_input} Already processed")
-                    has_processed = True
-                break
-
-        if not has_processed:
-            print("NO process")
-
-        if datetime.now().hour == 0 and datetime.now().minute == 0:
-            processed_status = {(time_range, id): False for time_range in time_ranges for id in range(1, 5)}
-
-
+while True:
+    getTime(2)
+    time.sleep(5)
+    getTime(1)

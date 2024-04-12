@@ -27,8 +27,8 @@ def main():
                     time.sleep(1)
                     count += 1
                     if(count == 5):
-                        data.getdata(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ
                         count == 0
+                        ### Time.getTime(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ
                 elif(result[0].boxes.cls.tolist().count(15) > 1):
                     count == 0               
             else:

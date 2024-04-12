@@ -1,7 +1,6 @@
-import time
 import requests
-import cv2
-import tets
+import getData
+import requests
 
 url = 'https://notify-api.line.me/api/notify'
 
@@ -17,7 +16,7 @@ def send_image(token, image_path, message):
     print(session_post.text)
 
 def sendCatEat(token, name):
-    image_path = '01.jpg'
+    image_path = 'cat1.jpg'
     message = "แจ้งเตือนการกินอาหาร :\n{} มากินอาหาร".format(name)
     send_image(token, image_path, message)
 
@@ -29,9 +28,6 @@ def sendTankFull(token):
     message = "แจ้งเตือนอาหารเม็ดในถังเหลือ :\nอาหารเม็ดใกล้จะเต็มแล้วกรุณานำไปกำจัด"
     send_text(token,message)
 
-if __name__ == "__main__":
-    token = 'mUPbblGzEZ3vSddDNOaBBiqHezJ0NBj3aRkT8XSFlbU'
-    sendCatEat(token, tets.name)
 """
     while True:
         cap = cv2.VideoCapture(0)
