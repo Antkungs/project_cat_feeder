@@ -1,5 +1,4 @@
 from datetime import datetime
-import time
 import requests
 import LineNotifi as line
 time_data = []
@@ -8,15 +7,18 @@ def getTime(select):
     try:
         response_cat = requests.get('http://localhost:3000/catinformation')
         if response_cat.status_code == 200:
-            # รับข้อมูลทั้งหมดจาก API
             cats = response_cat.json()  # รับข้อมูลทั้งหมดจาก API
-            for cat in cats:
-                current_time = datetime.now().time()
+            for cat in cats:  # loop เช็ค
+                #เช็คไอดีให้ตรงกับค่าที่ส่งมา
                 if cat['id_cat'] == select:
-                    name = cat['name_cat']
-                    food_give = cat['food_give']
-                    id_tank = cat['id_tank']
-                    #เวลาที่ 1,2,3 และ สถานะ
+
+                    name = cat['name_cat']# ดึงชื่อแมว
+
+                    food_give = cat['food_give']#อาหารที่จะให้(กรัม)
+                    id_tank = cat['id_tank']#ไอดี tank (Servo select)
+                    
+                    #เวลามื้อที่ 1,2,3 และ สถานะการกิน
+                    current_time = datetime.now().time() #เวลาปัจจุบัน
                     time_data = [
                         {'start': datetime.strptime(cat['time1_start'], "%H:%M:%S").time(),
                         'end': datetime.strptime(cat['time1_end'], "%H:%M:%S").time(),
@@ -30,6 +32,7 @@ def getTime(select):
                         'end': datetime.strptime(cat['time3_end'], "%H:%M:%S").time(),
                         'status': cat['time3_status']}
                     ]
+
                     ### loop เก็บค่าเวลาและสถานะการกิน
                     for idx, data in enumerate(time_data):
                         start_time = data['start']
@@ -38,36 +41,34 @@ def getTime(select):
 
                         print(current_time)
                         ### เช็คสถานะเวลาและการกินว่ากินไปหรือยัง ถ้ายังให้ทำอะไรก็ได้และตั้งค่าสถานะว่ากินไปแล้ว ###
-                        if start_time <= current_time <= end_time and not status:
-                            print("here")
-                            ### process more ###
+                        #staus การกินจะกินได้เมื่อเป็น false
+                        #เวลาต้องอยู่ระหว่าง start and end
+                        if start_time <= current_time <= end_time and not status :
+                            print("current_time pass")
+                            ### process more ทำการส่งค่า hardwareSelect.giveFood(food_give,id_tank) เพื่อทำการเลือก servo และชั่งน้ำหนักอาหาร ###
                             times = idx + 1
                             print(f"Processed ID {select} for time {times}")
+                            #เปลี่ยนสถานะ ณ เวลาที่มีการทำงาน ให้เป็น True เพื่อป้องกันการทำอีก
                             requests.get(f'http://localhost:3000/setstatus?id={select}&time={times}&status={True}')
 
-                            ### แจ้งเตือนไลน์ ###
+                            ### แจ้งเตือนไลน์ ว่าตัวไหนมากิน ###
                             responseToken = requests.get('http://localhost:3000/notification')
                             try:
                                 if responseToken.status_code == 200:  
                                     datas = responseToken.json()
                                     for data in datas:
                                         token = data['token']
+                                    line.sendCatEat(token, name)
                                 else:
                                     print('Error:', responseToken.text)
                             except Exception as e:
                                 print('Error occurred while processing responseToken:', e)
 
-                            line.sendCatEat(token, name)
                             ### แจ้งเตือนไลน์ ###
 
                         else:
-                            print("none")
+                            print("not in time")
         else:
             print('Error:', response_cat.text)
     except Exception as e:
         print('Error occurred while processing responseCat:', e)
-
-while True:
-    getTime(2)
-    time.sleep(5)
-    getTime(1)

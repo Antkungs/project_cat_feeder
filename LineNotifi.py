@@ -16,7 +16,7 @@ def send_image(token, image_path, message):
     print(session_post.text)
 
 def sendCatEat(token, name):
-    image_path = 'cat1.jpg'
+    image_path = 'temp.jpg'
     message = "แจ้งเตือนการกินอาหาร :\n{} มากินอาหาร".format(name)
     send_image(token, image_path, message)
 
