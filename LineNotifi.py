@@ -15,9 +15,9 @@ def send_image(token, image_path, message):
     session_post = requests.post(url, headers=LINE_HEADERS, files=file_img, data={'message': message})
     print(session_post.text)
 
-def sendCatEat(token, name):
+def sendCatEat(token, name , current_time):
     image_path = 'temp.jpg'
-    message = "แจ้งเตือนการกินอาหาร :\n{} มากินอาหาร".format(name)
+    message = "แจ้งเตือนการกินอาหาร :\n{} มากินอาหาร เวลา : {} น.".format(name,current_time)
     send_image(token, image_path, message)
 
 def sendTankLow(token,id):

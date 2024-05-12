@@ -1,15 +1,17 @@
-from datetime import datetime
-import data
+import time
+import datetime
 
-data = data.fetch_data_from_api()
-time_ranges = []
+# รับค่าเวลาปัจจุบันในหน่วยวินาที
+while True:
+    x = input("Enter 'reset' to reset the second or any other key to stop: ")
+    if x.lower() == 'reset':
+        timestamp = time.time()
 
-for item in data:
-    time1 = datetime.strptime(item["time1"], "%H:%M:%S")
-    time2 = datetime.strptime(item["time2"], "%H:%M:%S")
-    time3 = datetime.strptime(item["time3"], "%H:%M:%S")
-    
-    # Append the parsed times to the time_ranges list
-    time_ranges.append((time1, time2, time3))
+        # แปลง timestamp เป็น datetime object
+        datetime_obj = datetime.datetime.fromtimestamp(timestamp)
 
-print(time_ranges)
+        second = datetime_obj.second
+        print("Current second:", second)
+    else:
+        print("Stop")
+        break

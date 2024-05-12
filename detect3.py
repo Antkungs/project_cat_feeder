@@ -1,7 +1,8 @@
 import cv2
 import torch
 from ultralytics import YOLO
-
+import LineNotifi as line
+import getData
 def main():
     count = 0
     model = YOLO("yolov8x.pt")
@@ -24,7 +25,7 @@ def main():
                 if(result[0].boxes.cls.tolist().count(15) == 1):
                         print(name.loc[0, 'class'])
                 elif(result[0].boxes.cls.tolist().count(15) > 1):
-                    count == 0               
+                    count = 0               
             else:
                 print("do noting")
         except Exception as e:
@@ -37,7 +38,8 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
+
 if __name__ == "__main__":
-    main()
+    line.sendTankFull(getData.token)
 
 
