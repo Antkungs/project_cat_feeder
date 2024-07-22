@@ -1,12 +1,15 @@
-from flask import Flask, request, jsonify
+import cv2
+from flask import Flask, Response, request, jsonify,render_template
 import mysql.connector
 from flask_cors import CORS
-from flask import render_template
-from datetime import datetime
+from datetime import date, datetime, timedelta
+import LineNotifi as line
+from ultralytics import YOLO
+from ultralytics.utils.plotting import Annotator
 
 app = Flask(__name__)
 CORS(app)
-
+frame2 = 0
 # Connect to MySQL
 def connect():
     db = mysql.connector.connect(
@@ -20,6 +23,25 @@ def connect():
         print("Connected to MySQL!")
     return db
 
+def webcam():
+    # Open webcam
+    global frame2
+    
+    while True:
+        frame = frame2
+        # Process frame if needed
+        # Example: Convert frame to grayscale
+        # gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # Encode frame as JPEG
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        # Yield frame as byte stream
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
+        
+@app.route('/webcamFeed')
+def video_feed():
+    return Response(webcam(), mimetype='multipart/x-mixed-replace; boundary=frame')
+        
 @app.route('/', methods=['GET'])
 def webApp():
     db = connect()
@@ -44,7 +66,7 @@ def setting():
         for cat in data:
             results.append({'id_cat': cat[0], 'name_cat': cat[1]})
 
-        print(results)
+        #print(results)
         return render_template('setting.html', results=results)
 
     # Return an error message if the request method is not GET
@@ -59,7 +81,23 @@ def getTank():
         cursor.execute("SELECT * FROM tank")
         data = cursor.fetchall()
         if data:
-            results = [{'id_tank': record[0], 'name_tank': record[1], 'persens': record[2]} for record in data]
+            results = [{'id_tank': record[0], 'name_tank': record[1], 'notification_percen': record[2]} for record in data]
+            return jsonify(results)
+        else:
+            return jsonify({"error": "No data found"})
+
+    return jsonify({"error": "Invalid request"})
+
+
+@app.route('/getNameTank/<id_tank>', methods=['GET'])
+def getNameTank(id_tank):
+    db = connect()  # Assuming connect() is a function that connects to the database
+    if request.method == 'GET':
+        cursor = db.cursor()
+        cursor.execute(f"SELECT * FROM tank WHERE id_tank = '{id_tank}'")
+        data = cursor.fetchall()
+        if data:
+            results = [{ 'name_tank': record[1], 'notification_percen': record[2]} for record in data]
             return jsonify(results)
         else:
             return jsonify({"error": "No data found"})
@@ -117,6 +155,7 @@ def insertLine():
             cursor.execute(sql, values)
             # commit การเปลี่ยนแปลงในฐานข้อมูล
             db.commit()
+            line.send_text(token, "\nเปิดการใช้งานการแจ้งเตือนเครื่องให้อาหารอัตโนมัติสำเร็จ")
             return """
             <script>
                 alert('Update Successfully');
@@ -162,10 +201,42 @@ def insertTank():
             db.rollback()
             return f'Error: {e}'
 
-
-
-@app.route('/get_cat_infogrape/<cat_name>', methods=['GET'])
-def get_cat_infogrape(cat_name):
+#การกินทั้งหมดในเดือนปัจจุบัน
+@app.route('/get_cat_oneMonthInfoGrape/<cat_name>', methods=['GET'])
+def get_cat_oneMonthInfoGrape(cat_name):
+    db = connect()
+    cursor = db.cursor()
+    cursor.execute("SELECT id_cat FROM catinformation WHERE name_cat = %s", (cat_name,))
+    data = cursor.fetchone()
+    if data:
+        cat_id = data[0]
+        current_month_start = date.today().replace(day=1)
+        next_month_start = (current_month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+        cursor.execute("""
+            SELECT DATE(CurrentTime), SUM(food_eat) 
+            FROM eatinformation 
+            WHERE id_cat = %s AND CurrentTime >= %s AND CurrentTime < %s
+            GROUP BY DATE(CurrentTime) 
+            ORDER BY CurrentTime ASC
+        """, (cat_id, current_month_start, next_month_start))
+        data = cursor.fetchall()
+        results = []
+        for record in data:
+            original_date = record[0]
+            formatted_date = original_date.strftime("%d %b %Y")
+            cat_info = {
+                'cat_name': cat_name,
+                'date': formatted_date,
+                'total_food_eat': record[1],
+            }
+            results.append(cat_info)
+        return jsonify(results)
+    else:
+        return jsonify({"error": "Cat not found"})
+    
+#การกินทั้งหมด
+@app.route('/get_cat_allInfoGrape/<cat_name>', methods=['GET'])
+def get_cat_allInfoGrape(cat_name):
     db = connect()
     cursor = db.cursor()
     cursor.execute(f"SELECT id_cat FROM catinformation WHERE name_cat = '{cat_name}'")
@@ -176,7 +247,6 @@ def get_cat_infogrape(cat_name):
         data = cursor.fetchall()
         results = []
         for record in data:
-            # 
             original_date = record[0]
             original_date_string = original_date.strftime("%a, %d %b %Y %H:%M:%S")
             date_object = datetime.strptime(original_date_string, "%a, %d %b %Y %H:%M:%S")
@@ -191,7 +261,7 @@ def get_cat_infogrape(cat_name):
     else:
         return jsonify({"error": "Cat not found"})
 
-    
+#ข้อมูลการกิน ณ วันนี้
 @app.route('/get_cat_info/<cat_name>', methods=['GET'])
 def get_cat_info(cat_name):
     db = connect()
@@ -220,7 +290,7 @@ def get_cat_info(cat_name):
         return jsonify({"error": "Cat not found"})
 
 
-
+#ข้อมูลของแมว
 @app.route('/catinformation', methods=['GET'])
 def get_catinformation():
     db = connect()
@@ -235,12 +305,12 @@ def get_catinformation():
                 'name_cat': x[1],
                 'food_give': x[2],
                 'id_tank': x[3],
-                'time1_start': str(datetime.timedelta(seconds=x[4].total_seconds())),
-                'time1_end': str(datetime.timedelta(seconds=x[5].total_seconds())),    
-                'time2_start': str(datetime.timedelta(seconds=x[6].total_seconds())),
-                'time2_end': str(datetime.timedelta(seconds=x[7].total_seconds())),
-                'time3_start': str(datetime.timedelta(seconds=x[8].total_seconds())),
-                'time3_end': str(datetime.timedelta(seconds=x[9].total_seconds())),
+                'time1_start': str(timedelta(seconds=x[4].total_seconds())),
+                'time1_end': str(timedelta(seconds=x[5].total_seconds())),    
+                'time2_start': str(timedelta(seconds=x[6].total_seconds())),
+                'time2_end': str(timedelta(seconds=x[7].total_seconds())),
+                'time3_start': str(timedelta(seconds=x[8].total_seconds())),
+                'time3_end': str(timedelta(seconds=x[9].total_seconds())),
                 'time1_status': x[10],
                 'time2_status': x[11],
                 'time3_status': x[12],
@@ -324,6 +394,103 @@ def update_status():
     db.commit()
     cursor.close()
 
-if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=3000)
-    
+def deleteData(select):
+    db = connect()
+    cursor = db.cursor()
+    # อัปเดตค่าของ time1_status, time2_status, และ time3_status เป็น FALSE ทุกๆเที่ยงคืน
+    cursor.execute(f"DELETE FROM catinformation WHERE id_cat = '{select}';")
+    db.commit()
+    cursor.close()
+    updateID(select)
+
+def updateID(select):
+    db = connect()
+    cursor = db.cursor()
+    # อัปเดตค่าของ time1_status, time2_status, และ time3_status เป็น FALSE ทุกๆเที่ยงคืน
+    cursor.execute(f"UPDATE catinformation SET id_cat = id_cat - 1 WHERE id_cat > '{select}';")
+    db.commit()
+    cursor.close()
+
+
+def detect():
+    global frame2
+    model = YOLO("model/countCat.pt")
+    model2 = YOLO("model/best.pt") #model หาแมว
+    cap = cv2.VideoCapture(0)
+    line.start()
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        result = model(frame)
+        result2 = model2(frame)
+        try:  
+
+            for r in result:
+                annotator = Annotator(frame)    
+                boxes = r.boxes
+                for box in boxes:        
+                    b = box.xyxy[0]  # get box coordinates in (left, top, right, bottom) format
+                    c = box.cls
+                    annotator.box_label(b, model.names[int(c)]) 
+            frame = annotator.result() 
+
+            current_time = datetime.now() 
+            if(result[0].boxes.cls.tolist().count(0) > 1): #เช็คแมวว่ามี > 1 ตัว
+                print("เจอแมวมากกว่า 1 ตัว")
+                updated_time = current_time + timedelta(seconds=5)
+                
+                
+            elif(result[0].boxes.cls.tolist().count(0) == 1 and current_time >= updated_time): #เช็คแมวว่ามี 1 ตัว
+                #ชื่อแมวที่ตรวจเจอ
+                for r in result2:    
+                    boxes = r.boxes
+                    for box in boxes:        
+                        c = box.cls
+                print(model2.names[int(c)])
+                filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
+                cv2.imwrite(filename, frame)
+                line.send_image("temp.jpg", model2.names[int(c)])
+                current_time = datetime.now() 
+                updated_time = current_time + timedelta(seconds=5)
+                #Time.getTime(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
+
+                #print(name.loc[0, 'class']) #บอกว่าแมว class ไหน
+                    #if found == False and count == 0:
+                       # count = 1
+                        #found = True
+                    #if count == 1:
+                       # updated_time = current_time + timedelta(seconds=5)
+                        #count = 0
+                       # print(count)
+                    #หน่วง 5 วิเพื่อทำการยืนยัน
+                    #if current_time >= updated_time:
+                        #found == False
+                        #count = 0
+                        #filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
+                        #cv2.imwrite(filename, frame)
+                        #print("getTime")
+                        #line.send_image("j5Vy1V07apBG2tuWIuJ4S5aolnhM7VhBRla7ZdDnYgh", "temp.jpg", "message")
+                        #Time.getTime(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
+
+            else:
+                print("do noting")
+
+        except Exception as e:
+            updated_time = current_time + timedelta(seconds=5)
+            print("NON FOUND")
+        
+        frame2 = frame
+
+        #cv2.imshow("result",frame)
+        if cv2.waitKey(10) & 0xFF == ord('x'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+def mainapi():
+    app.run(host="0.0.0.0", port=3000)
+
+mainapi()

@@ -1,0 +1,147 @@
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: #F8F2DA;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+
+
+.settingCat{
+  text-align: center;
+  background-color: #f1f1f1;
+  margin: 5px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px; /* ทำให้เกิดกรอบโค้ง */
+  overflow: hidden;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  text-decoration: none ;
+  color: black;
+}
+
+input[type="text"],[type="time"],[type="select"]{
+  padding: 8px;
+  margin: 5px;
+  border-radius: 10px;
+  border: none;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+
+input[type="radio"],.tank{
+  padding: 8px;
+  margin: 10px;
+}
+
+.padding-time{
+  padding-left: 800px; 
+  padding-right: 800px;
+}
+
+button[type="submit"]{
+  --color: blue;
+  font-family: inherit;
+  display: inline-block;
+  width: 6em;
+  height: 2.6em;
+  line-height: 2.5em;
+  overflow: hidden;
+  cursor: pointer;
+  margin: 20px;
+  font-size: 17px;
+  z-index: 1;
+  color: var(--color);
+  border: 2px solid var(--color);
+  border-radius: 6px;
+  position: relative;
+}
+
+
+button[type="reset"]{
+  --color: red;
+  font-family: inherit;
+  display: inline-block;
+  width: 6em;
+  height: 2.6em;
+  line-height: 2.5em;
+  overflow: hidden;
+  cursor: pointer;
+  margin: 20px;
+  font-size: 17px;
+  z-index: 1;
+  color: var(--color);
+  border: 2px solid var(--color);
+  border-radius: 6px;
+  position: relative;
+}
+
+button::before {
+  position: absolute;
+  content: "";
+  background: var(--color);
+  width: 150px;
+  height: 200px;
+  z-index: -1;
+  border-radius: 50%;
+}
+
+button:hover {
+  color: white;
+}
+
+button:before {
+  top: 100%;
+  left: 100%;
+  transition: 0.3s all;
+}
+
+button:hover::before {
+  top: -30px;
+  left: -30px;
+}
+
+@media screen and (max-width: 1440px) { 
+
+  .padding-time{
+    padding-left: 500px; 
+    padding-right: 500px;
+  }
+}
+
+@media screen and (max-width: 1024px) { 
+
+  body{
+    background-color: #F8F2DA;
+    font-size: 80%;
+  }
+  .padding-time{
+    padding-left: 300px; 
+    padding-right: 300px;
+  }
+}
+
+@media screen and (max-width: 768px) { 
+
+  body{
+    background-color: #F8F2DA;
+    font-size: 80%;
+  }
+  .padding-time{
+    padding-left: 150px; 
+    padding-right: 150px
+  }
+}
+
+@media screen and (max-width: 500px) { 
+  body{
+    background-color: #F8F2DA;
+    font-size: 80%;
+  }
+  .padding-time{
+    padding: 0px;
+  }
+}
+
+

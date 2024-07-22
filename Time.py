@@ -18,9 +18,6 @@ def getTime(select):
 
                     food_give = cat['food_give']#อาหารที่จะให้(กรัม)
                     id_tank = cat['id_tank']#ไอดี tank (Servo select)
-                    
-                    current_time = datetime.now().time() #เวลาปัจจุบัน
-
                     #เวลามื้อที่ 1,2,3 และ สถานะการกิน
                     time_data = [
                         #มื้อที่ 1
@@ -36,7 +33,8 @@ def getTime(select):
                         'end': datetime.strptime(cat['time3_end'], "%H:%M:%S").time(),
                         'status': cat['time3_status']}
                     ]
-
+                    
+                    current_time = datetime.now().time() #เวลาปัจจุบัน
                     print(id_cat)
                     print(current_time)
                     ### loop เก็บค่าเวลาและสถานะการกิน idx = มื้อ 
@@ -44,7 +42,7 @@ def getTime(select):
                         start_time = data['start']
                         end_time = data['end']
                         status = data['status']
-
+                    
                         ### เช็คสถานะเวลาและการกินว่ากินไปหรือยัง ถ้ายังให้ทำอะไรก็ได้และตั้งค่าสถานะว่ากินไปแล้ว ###
                         #เวลาต้องอยู่ระหว่าง start and end staus ต้องเป็น false
                         if start_time <= current_time <= end_time and not status :
@@ -56,18 +54,8 @@ def getTime(select):
                             requests.get(f'http://localhost:3000/setstatus?id={select}&time={times}&status={True}')
 
                             ### แจ้งเตือนไลน์ ว่าตัวไหนมากิน ###
-                            responseToken = requests.get('http://localhost:3000/notification')
-                            try:
-                                if responseToken.status_code == 200:  
-                                    datas = responseToken.json()
-                                    for data in datas:
-                                        token = data['token']
-                                    current_time_string = current_time.strftime("%H:%M:%S")
-                                    line.sendCatEat(token, name , current_time_string)
-                                else:
-                                    print('Error:', responseToken.text)
-                            except Exception as e:
-                                print('Error occurred while processing responseToken:', e)
+                            current_time_string = current_time.strftime("%H:%M:%S")
+                            line.sendCatEat(name , current_time_string)
                             ### แจ้งเตือนไลน์ ###
 
                         else:
@@ -81,6 +69,6 @@ def getTime(select):
 if __name__ == "__main__":
     while True:
         getTime(2)
-        time.sleep(1)
+        time.sleep(5)
         getTime(1)
         time.sleep(1)
