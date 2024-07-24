@@ -5,7 +5,9 @@ if __name__ == "__main__":
 
     thread1 = threading.Thread(target=api.detect)
     thread2 = threading.Thread(target=api.mainapi)
-    
+    thread1.daemon = True
+    # thread2.daemon = True
+
 
     thread1.start()
     thread2.start()

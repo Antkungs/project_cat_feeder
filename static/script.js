@@ -43,20 +43,21 @@ function showCatInfo(catName) {
     fetch('/get_cat_info/' + catName)
         .then(response => response.json())
         .then(data => {
-            showGrapeMonth(catName,"chartAll");
+
             const catInfoDiv = document.getElementById('catInfo');
             catInfoDiv.innerHTML = ''; 
             const tageTitle = document.getElementById('tageTitle');
-            tageTitle.innerHTML = '';
+            tageTitle.innerHTML = '';  
             const chartAll = document.getElementById('chartAll');
             chartAll.style.display = 'block'; 
             const video_feed = document.getElementById('video_feed');
             video_feed.src = ''; 
-            video_feed.style.display = 'none';          
+            video_feed.style.display = 'none';    
             const catNameDiv = document.getElementById('catName');
             catNameDiv.textContent = catName;
             const switchChart = document.getElementById('switchChart');
             switchChart.style.display = 'block';
+
 
             if (data.error) {
                 catInfoDiv.textContent = 'Error: ' + data.error;
@@ -121,6 +122,7 @@ function showCatInfo(catName) {
                     catInfoDiv.appendChild(recordDiv);
                 });
             }
+            toggleCharts()
 
         })
         .catch(error => console.error('Error:', error));
@@ -233,7 +235,7 @@ function catSetting(ids,names) {
             
                 <div  style="padding-top:20px">
                     <label for="food_quantity"><b>ปริมาณอาหารต่อมื้อ (กรัม) </b></label><br>
-                    <input type="text" id="food_quantity" name="food_quantity" placeholder="ปริมาณอาหาร" required><br>
+                    <input type="number" id="food_quantity" name="food_quantity" placeholder="ปริมาณอาหาร" min="1" required><br>
                 </div>
                 <p><b>ช่วงเวลาการให้อาหาร</b></p>
 
@@ -353,7 +355,7 @@ function tankSetting() {
                 </div><br>
                 <div>
                     <label for="percenTank1">แจ้งเตือนเมื่อปริมาณอาหารถัง ${data[0].name_tank} <br>ต่ำกว่า(ร้อยละ)</label><br>
-                    <input type="text" id="percenTank1" name="percenTank1" placeholder="ร้อยละ" value="${data[0].notification_percen}" required><br>
+                    <input type="number" id="percenTank1" name="percenTank1" placeholder="ร้อยละ" value="${data[0].notification_percen}" min="1" required><br>
                 </div><br>
 
                 <div style="padding-top:30px">
@@ -362,7 +364,7 @@ function tankSetting() {
                 </div><br>
                 <div>
                     <label for="percenTank2">แจ้งเตือนเมื่อปริมาณอาหารถัง ${data[1].name_tank} <br>ต่ำกว่า(ร้อยละ)</label><br>
-                    <input type="text" id="percenTank2" name="percenTank2" placeholder="ร้อยละ" value="${data[1].notification_percen}" required><br>
+                    <input type="number" id="percenTank2" name="percenTank2" placeholder="ร้อยละ" value="${data[1].notification_percen}" min="1" required><br>
                 </div><br>
                 
                 <button type="submit" value="Submit">Submit</button>

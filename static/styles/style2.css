@@ -21,7 +21,7 @@ body {
   color: black;
 }
 
-input[type="text"],[type="time"],[type="select"]{
+input[type="text"],[type="time"],[type="select"],[type="number"]{
   padding: 8px;
   margin: 5px;
   border-radius: 10px;

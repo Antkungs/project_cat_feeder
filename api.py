@@ -1,11 +1,11 @@
-import cv2
+import cv2 , time ,mysql.connector
 from flask import Flask, Response, request, jsonify,render_template
-import mysql.connector
 from flask_cors import CORS
 from datetime import date, datetime, timedelta
 import LineNotifi as line
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
+
 
 app = Flask(__name__)
 CORS(app)
@@ -413,47 +413,48 @@ def updateID(select):
 
 
 def detect():
-    global frame2
+    global frame2 , current_time
     model = YOLO("model/countCat.pt")
-    model2 = YOLO("model/best.pt") #model หาแมว
+    model2 = YOLO("model/classification.pt") #model หาแมว
     cap = cv2.VideoCapture(0)
-    line.start()
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
-        result = model(frame)
-        result2 = model2(frame)
+        result1 = model(frame)
+        result2 = model2(frame) 
         try:  
-
-            for r in result:
+            #ตีกรอบแมวธรรมดา
+            for r in result1:
                 annotator = Annotator(frame)    
                 boxes = r.boxes
                 for box in boxes:        
-                    b = box.xyxy[0]  # get box coordinates in (left, top, right, bottom) format
+                    b = box.xyxy[0]
                     c = box.cls
                     annotator.box_label(b, model.names[int(c)]) 
             frame = annotator.result() 
 
-            current_time = datetime.now() 
-            if(result[0].boxes.cls.tolist().count(0) > 1): #เช็คแมวว่ามี > 1 ตัว
+            current_time = time.time()
+
+            if(result1[0].boxes.cls.tolist().count(0) > 1): #เช็คแมวว่ามี > 1 ตัว
                 print("เจอแมวมากกว่า 1 ตัว")
-                updated_time = current_time + timedelta(seconds=5)
+                updated_time = current_time + 5
                 
+            elif(result1[0].boxes.cls.tolist().count(0) == 1 and current_time >= updated_time): #เช็คแมวว่ามี 1 ตัว
+                for result in result2:
+                    probs = result.probs  # Probs object for classification outputs
+                    if(probs.top1conf > 0.7): #id classification
+                        filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
+                        cv2.imwrite(filename, frame)
+                        line.send_image("temp.jpg", model2.names[probs.top1])
+                        current_time = time.time() 
+                        updated_time = current_time + 5 
+                        print(probs.top1+1)
+                        print(model2.names[probs.top1])
+                    else:
+                        print("NOT SURE")
                 
-            elif(result[0].boxes.cls.tolist().count(0) == 1 and current_time >= updated_time): #เช็คแมวว่ามี 1 ตัว
-                #ชื่อแมวที่ตรวจเจอ
-                for r in result2:    
-                    boxes = r.boxes
-                    for box in boxes:        
-                        c = box.cls
-                print(model2.names[int(c)])
-                filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
-                cv2.imwrite(filename, frame)
-                line.send_image("temp.jpg", model2.names[int(c)])
-                current_time = datetime.now() 
-                updated_time = current_time + timedelta(seconds=5)
                 #Time.getTime(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
 
                 #print(name.loc[0, 'class']) #บอกว่าแมว class ไหน
@@ -478,9 +479,11 @@ def detect():
                 print("do noting")
 
         except Exception as e:
-            updated_time = current_time + timedelta(seconds=5)
-            print("NON FOUND")
-        
+            #updated_time = current_time + 5
+            print("ERROR")
+
+        #current_time = time.time()
+        #updated_time = current_time + 2
         frame2 = frame
 
         #cv2.imshow("result",frame)
