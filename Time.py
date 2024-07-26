@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from datetime import datetime
 import time
 import requests
@@ -6,6 +7,7 @@ time_data = []
 
 def getTime(select):
     try:
+        global haveEat
         response_cat = requests.get('http://localhost:3000/catinformation')
         if response_cat.status_code == 200:
             cats = response_cat.json()  # รับข้อมูลทั้งหมดจาก API
@@ -57,18 +59,13 @@ def getTime(select):
                             current_time_string = current_time.strftime("%H:%M:%S")
                             line.sendCatEat(name , current_time_string)
                             ### แจ้งเตือนไลน์ ###
+                            haveEat = True
 
                         else:
                             #ไม่มีเวลาการกิน
                             print("not in time")
         else:
             print('Error:', response_cat.text)
+            haveEat = False
     except Exception as e:
         print('Error occurred while processing responseCat:', e)
-
-if __name__ == "__main__":
-    while True:
-        getTime(2)
-        time.sleep(5)
-        getTime(1)
-        time.sleep(1)

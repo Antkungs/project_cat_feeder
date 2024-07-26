@@ -1,8 +1,10 @@
-import cv2 , time ,mysql.connector
+import cv2 , time ,mysql.connector , Time
+import requests
 from flask import Flask, Response, request, jsonify,render_template
 from flask_cors import CORS
 from datetime import date, datetime, timedelta
 import LineNotifi as line
+import hardwareSelect
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
 
@@ -10,6 +12,7 @@ from ultralytics.utils.plotting import Annotator
 app = Flask(__name__)
 CORS(app)
 frame2 = 0
+haveEat = False
 # Connect to MySQL
 def connect():
     db = mysql.connector.connect(
@@ -413,7 +416,7 @@ def updateID(select):
 
 
 def detect():
-    global frame2 , current_time
+    global frame2 , current_time , haveEat
     model = YOLO("model/countCat.pt")
     model2 = YOLO("model/classification.pt") #model หาแมว
     cap = cv2.VideoCapture(0)
@@ -422,9 +425,10 @@ def detect():
         ret, frame = cap.read()
         if not ret:
             break
-        result1 = model(frame)
+        result1 = model(frame,conf=0.6)
         result2 = model2(frame) 
         try:  
+            print(haveEat)
             #ตีกรอบแมวธรรมดา
             for r in result1:
                 annotator = Annotator(frame)    
@@ -436,7 +440,7 @@ def detect():
             frame = annotator.result() 
 
             current_time = time.time()
-
+            #print(result1[0].boxes.conf)
             if(result1[0].boxes.cls.tolist().count(0) > 1): #เช็คแมวว่ามี > 1 ตัว
                 print("เจอแมวมากกว่า 1 ตัว")
                 updated_time = current_time + 5
@@ -444,37 +448,30 @@ def detect():
             elif(result1[0].boxes.cls.tolist().count(0) == 1 and current_time >= updated_time): #เช็คแมวว่ามี 1 ตัว
                 for result in result2:
                     probs = result.probs  # Probs object for classification outputs
+                    print(probs.top1+1)
                     if(probs.top1conf > 0.7): #id classification
                         filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
                         cv2.imwrite(filename, frame)
-                        line.send_image("temp.jpg", model2.names[probs.top1])
-                        current_time = time.time() 
-                        updated_time = current_time + 5 
-                        print(probs.top1+1)
-                        print(model2.names[probs.top1])
+                        #line.send_image("temp.jpg", model2.names[probs.top1])
+                        getTime(probs.top1 + 1) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
+                        while haveEat:   
+                            print(probs.top1+1)
+                            print(model2.names[probs.top1])
+                            ret, frame = cap.read()
+                            if not ret:
+                                break
+                            result1 = model(frame)
+                            current_time = time.time() 
+                            if(result1[0].boxes.cls.tolist().count(0) >= 1):
+                                play_loop_time = current_time + 5
+                            elif(current_time > play_loop_time):
+                                haveEat = False
+                            frame2 = frame
+                            #hardwareSelect.throwAwayFood()
+                        current_time = time.time()
+                        updated_time = current_time + 5
                     else:
                         print("NOT SURE")
-                
-                #Time.getTime(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
-
-                #print(name.loc[0, 'class']) #บอกว่าแมว class ไหน
-                    #if found == False and count == 0:
-                       # count = 1
-                        #found = True
-                    #if count == 1:
-                       # updated_time = current_time + timedelta(seconds=5)
-                        #count = 0
-                       # print(count)
-                    #หน่วง 5 วิเพื่อทำการยืนยัน
-                    #if current_time >= updated_time:
-                        #found == False
-                        #count = 0
-                        #filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
-                        #cv2.imwrite(filename, frame)
-                        #print("getTime")
-                        #line.send_image("j5Vy1V07apBG2tuWIuJ4S5aolnhM7VhBRla7ZdDnYgh", "temp.jpg", "message")
-                        #Time.getTime(name.loc[0, 'class']) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
-
             else:
                 print("do noting")
 
@@ -492,6 +489,71 @@ def detect():
 
     cap.release()
     cv2.destroyAllWindows()
+        
+def getTime(select):
+    try:
+        global haveEat
+        time_data = []
+        response_cat = requests.get('http://localhost:3000/catinformation')
+        if response_cat.status_code == 200:
+            cats = response_cat.json()  # รับข้อมูลทั้งหมดจาก API
+            for cat in cats:  # loop เช็ค
+                #เช็คไอดีให้ตรงกับค่าที่ส่งมา
+                if cat['id_cat'] == select:
+                    
+                    id_cat = cat['id_cat']
+                    name = cat['name_cat']# ดึงชื่อแมว
+
+                    food_give = cat['food_give']#อาหารที่จะให้(กรัม)
+                    id_tank = cat['id_tank']#ไอดี tank (Servo select)
+                    #เวลามื้อที่ 1,2,3 และ สถานะการกิน
+                    time_data = [
+                        #มื้อที่ 1
+                        {'start': datetime.strptime(cat['time1_start'], "%H:%M:%S").time(),
+                        'end': datetime.strptime(cat['time1_end'], "%H:%M:%S").time(),
+                        'status': cat['time1_status']},
+                        #มื้อที่ 2
+                        {'start': datetime.strptime(cat['time2_start'], "%H:%M:%S").time(),
+                        'end': datetime.strptime(cat['time2_end'], "%H:%M:%S").time(),
+                        'status': cat['time2_status']},
+                        #มื้อที่ 3
+                        {'start': datetime.strptime(cat['time3_start'], "%H:%M:%S").time(),
+                        'end': datetime.strptime(cat['time3_end'], "%H:%M:%S").time(),
+                        'status': cat['time3_status']}
+                    ]
+                    
+                    current_time = datetime.now().time() #เวลาปัจจุบัน
+                    print(id_cat)
+                    print(current_time)
+                    ### loop เก็บค่าเวลาและสถานะการกิน idx = มื้อ 
+                    for idx, data in enumerate(time_data):
+                        start_time = data['start']
+                        end_time = data['end']
+                        status = data['status']
+                    
+                        ### เช็คสถานะเวลาและการกินว่ากินไปหรือยัง ถ้ายังให้ทำอะไรก็ได้และตั้งค่าสถานะว่ากินไปแล้ว ###
+                        #เวลาต้องอยู่ระหว่าง start and end staus ต้องเป็น false
+                        if start_time <= current_time <= end_time and not status :
+                            print("current_time pass")
+                            ### รอเขียน process ทำการส่งค่าเพื่อเรียกใช้ Servo hardwareSelect.giveFood(food_give,id_tank) ปริมาณอาหาร,Servo ที่ต้องหมุน ###
+                            times = idx + 1
+                            print(f"Processed ID {select} for time {times}")
+                            #เปลี่ยนสถานะ ณ เวลาที่มีการทำงาน  ให้เป็น True เพื่อป้องกันการทำซ้ำอีกรอบ
+                            requests.get(f'http://localhost:3000/setstatus?id={select}&time={times}&status={True}')
+
+                            ### แจ้งเตือนไลน์ ว่าตัวไหนมากิน ###
+                            current_time_string = current_time.strftime("%H:%M:%S")
+                            line.sendCatEat(name , current_time_string)
+                            ### แจ้งเตือนไลน์ ###
+                            haveEat = True
+
+                        else:
+                            #ไม่มีเวลาการกิน
+                            print("not in time")
+        else:
+            print('Error:', response_cat.text)
+    except Exception as e:
+        print('Error occurred while processing responseCat:', e)
 
 def mainapi():
     app.run(host="0.0.0.0", port=3000)
