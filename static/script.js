@@ -57,6 +57,8 @@ function showCatInfo(catName) {
             catNameDiv.textContent = catName;
             const switchChart = document.getElementById('switchChart');
             switchChart.style.display = 'block';
+            const blockChart = document.getElementById('blockChart');
+            blockChart.style.display = 'block';
 
 
             if (data.error) {
@@ -157,7 +159,7 @@ function showGrapeMonth(catName,chart) {
                         label: 'ปริมาณการกินเดือนปัจจุบัน',
                         data: totalFoodEaten,
                         fill: false,
-                        borderColor: 'rgb(75, 192, 192)',
+                        borderColor: '#512da8',
                         tension: 0.1
                     }]
                 },
@@ -195,7 +197,7 @@ function showGrapeAll(catName) {
                         label: 'ปริมาณการกินอาหารทั้งหมด',
                         data: totalFoodEaten,
                         fill: false,
-                        borderColor: 'rgb(75, 192, 192)',
+                        borderColor: '#512da8',
                         tension: 0.1
                     }]
                 },
@@ -222,8 +224,8 @@ function catSetting(ids,names) {
         catSettingElement.innerHTML = ``
         const hideCatSettingElement = document.getElementById('hideCatSetting');
         hideCatSettingElement.innerHTML = `
-        <div style="align=center; ,padding: 20px;">
-            <h3 style="text-align: center;  padding-top:30px"><b>แก้ไขรายละเอียดแมว ${names}</b></h3>
+        <div style="align=center; ,padding: 20px;" id="contrainnerSetting">
+            <h3 style="text-align: center;  padding-top:30px "><b style="color: #512da8;">แก้ไขรายละเอียดแมว ${names}</b></h3>
             <div style="text-align: center;">
 
             <form id="updateForm" action="/insertData/${ids}" method="post">
@@ -278,7 +280,10 @@ function catSetting(ids,names) {
                 </div>
             
                 <br>
-                <label for="food_container"><b>ถังอาหาร</b></label><br>
+                <label for="food_container"><b>ถังอาหาร</b>                  
+                <div class="tooltip" style="color: #512da8;">
+                        <i class="fas fa-info-circle"></i><span class="tooltiptext">ใช้สำหรับการตั้งค่าถังอาหารที่ต้องการให้</span>
+                    </div></label><br>
                 <div style="display:flex;align-items: center;padding-right:5px;flex-direction: row;justify-content: center;padding-top:20px">
                 
                     <input type="radio" id="tank1" name="tank" value="${data[0]['id_tank']}" required>
@@ -325,12 +330,15 @@ function lineSetting() {
     catSetting.innerHTML = ``
     const hideCatSettingElement = document.getElementById('hideCatSetting');
     hideCatSettingElement.innerHTML = `
-        <div  style="text-align: center; padding-top: 250px;">
+        <div  style="text-align: center; padding-top: 50px;" id="contrainnerSetting">
             <form id="updateFormLine" action="/insertLine" method="post">
-                <div>
-                    <label for="token">Token Line (สำหรับใช้การแจ้งเตือน)</label><br>
-                    <input type="text" id="token" name="token" placeholder="Token_Line" required><br>
-                </div><br>
+                <h3 style="text-align: center;"><b style="color: #512da8;">ตั้งค่าการแจ้งเตือน</b></h3>
+                    <label for="token">LineToken</label>                    
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">Token สำหรับรับการแจ้งเตือนผ่านแอพ Line</span>
+                    </div><br>
+                    <input type="text" id="token" name="token" placeholder="LineToken" required><br>
+                    <br>
                 <button type="submit" value="Submit">Submit</button>
                 <button type="reset" onclick="redirectToSetting()">Cancel</button>
             </form>
@@ -347,23 +355,36 @@ function tankSetting() {
     catSetting.innerHTML = ``
     const hideCatSettingElement = document.getElementById('hideCatSetting');
     hideCatSettingElement.innerHTML = `
-        <div  style="text-align: center; padding-top: 200px; ">
+        <div  style="text-align: center; padding-top: 50px; " id="contrainnerSetting">
             <form id="updateFormTank" action="/insertTank" method="post">
+                <h3 style="text-align: center;"><b style="color: #512da8;">ตั้งค่าถังอาหาร</b></h3>
                 <div>
-                    <label for="Tank1">Rename ${data[0].name_tank}</label><br>
+                    <label for="Tank1">${data[0].name_tank}                 
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">ใช้สำหรับการ Rename ${data[0].name_tank}</span>
+                    </div></label><br>
                     <input type="text" id="Tank1" name="Tank1" placeholder="Rename tank1" value="${data[0].name_tank}" required><br>
                 </div><br>
                 <div>
-                    <label for="percenTank1">แจ้งเตือนเมื่อปริมาณอาหารถัง ${data[0].name_tank} <br>ต่ำกว่า(ร้อยละ)</label><br>
+                    <label for="percenTank1">แจ้งเตือน ${data[0].name_tank}                   
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">ใช้สำหรับการตั้งค่าการแจ้งเตือนเมื่อปริมาณอาหารในถัง ${data[0].name_tank} ต่ำกว่าร้อยละ ที่กำหนด</span>
+                    </div></label><br>
                     <input type="number" id="percenTank1" name="percenTank1" placeholder="ร้อยละ" value="${data[0].notification_percen}" min="1" required><br>
                 </div><br>
 
                 <div style="padding-top:30px">
-                    <label for="percenTank2">Rename ${data[1].name_tank}</label><br>
+                    <label for="percenTank2">${data[1].name_tank}</label>                    
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">ใช้สำหรับการ Rename ${data[1].name_tank}</span>
+                    </div><br>
                     <input type="text" id="Tank2" name="Tank2" placeholder="Rename tank2" value="${data[1].name_tank}" required><br>
                 </div><br>
                 <div>
-                    <label for="percenTank2">แจ้งเตือนเมื่อปริมาณอาหารถัง ${data[1].name_tank} <br>ต่ำกว่า(ร้อยละ)</label><br>
+                    <label for="percenTank2">แจ้งเตือน ${data[1].name_tank}
+                    <div class="tooltip">
+                        <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">ใช้สำหรับการตั้งค่าการแจ้งเตือนเมื่อปริมาณอาหารในถัง ${data[1].name_tank} ต่ำกว่าร้อยละ ที่กำหนด</span>
+                    </div></label><br>
                     <input type="number" id="percenTank2" name="percenTank2" placeholder="ร้อยละ" value="${data[1].notification_percen}" min="1" required><br>
                 </div><br>
                 

@@ -1,13 +1,18 @@
 
 body {
   font-family: "Poppins", sans-serif;
-  background-color: #F8F2DA;
+  background-color: #c9d6ff;
+  background: linear-gradient(to right, #e2e2e2, #c9d6ff);
+
 }
 
 div{
   font-size: 30px;
 }
-
+canvas {
+  width: 100% !important;  /* Ensures the canvas takes the full width of its container */
+  height: auto !important; /* Maintains the aspect ratio */
+}
 #currentDateTime {
   font-size: 24px;
   text-align: center;
@@ -26,7 +31,7 @@ div{
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: #484452;
+  background-color: #512da8;
   overflow-x: hidden;
   transition: 0.5s;
   padding-top: 60px;
@@ -67,13 +72,16 @@ div{
 
 .info-box {
   text-align: center;
-  background-color: #f1f1f1;
+  background-color: #d8e1ff;
   margin: 5px;
   padding: 10px;
   font-size: 16px;
   border-radius: 5px; /* ทำให้เกิดกรอบโค้ง */
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 #switchChart{
@@ -123,15 +131,25 @@ div{
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: #512da8;
 }
 
 input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-#chartAll{
+.lineColor{
+ color: #512da8;
+}
+#blockChart{
   display: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  padding: 40px;
 }
 
 @media screen and (max-width: 426px) {

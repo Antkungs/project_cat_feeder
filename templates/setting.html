@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="{{ url_for('static', filename='script.js') }}"></script>
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style2.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Setting</title>
 </head>
 <body>
@@ -12,14 +13,16 @@
         <div id="hideCatSetting"></div>
         
         <div id="catSetting" style="padding: 80px; text-align: center;">
-            <h1>หน้าสำหรับการตั้งค่าพื้นฐาน</h1>
+            <h1 style="color: #512da8;">หน้าสำหรับการตั้งค่าพื้นฐาน</h1>
             <div>
                 <p style="padding-top: 30px;">ตั้งค่าสำหรับน้องแมว</p>
-                {% for result in results %}
-                <div style=" display: flex; justify-content: center;">
-                    <a href="#" onclick="catSetting('{{ result.id_cat }}','{{ result.name_cat }}')" class="settingCat">ตั้งค่าน้อง {{ result.name_cat }}</a>
+                <div class="cotrainnerSettingCat">
+                    {% for result in results %}
+                    <div style=" display: flex; justify-content: center;">
+                        <a href="#" onclick="catSetting('{{ result.id_cat }}','{{ result.name_cat }}')" class="settingCat">ตั้งค่าน้อง {{ result.name_cat }}</a>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
                 <div style="padding-top: 30px;">
                     <p>ตั้งค่าสำหรับเครื่องให้อาหาร</p>
                 </div>
