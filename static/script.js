@@ -56,7 +56,7 @@ function showCatInfo(catName) {
             const catNameDiv = document.getElementById('catName');
             catNameDiv.textContent = catName;
             const switchChart = document.getElementById('switchChart');
-            switchChart.style.display = 'block';
+            switchChart.style.display = 'flex';
             const blockChart = document.getElementById('blockChart');
             blockChart.style.display = 'block';
 
@@ -220,10 +220,8 @@ function catSetting(ids,names) {
     fetch('/getTank')
     .then(response => response.json())
     .then(data => {
-        const catSettingElement = document.getElementById('catSetting');
-        catSettingElement.innerHTML = ``
-        const hideCatSettingElement = document.getElementById('hideCatSetting');
-        hideCatSettingElement.innerHTML = `
+        const catSetting = document.getElementById('catSetting');
+        catSetting.innerHTML = `
         <div style="align=center; ,padding: 20px;" id="contrainnerSetting">
             <h3 style="text-align: center;  padding-top:30px "><b style="color: #512da8;">แก้ไขรายละเอียดแมว ${names}</b></h3>
             <div style="text-align: center;">
@@ -237,7 +235,7 @@ function catSetting(ids,names) {
             
                 <div  style="padding-top:20px">
                     <label for="food_quantity"><b>ปริมาณอาหารต่อมื้อ (กรัม) </b></label><br>
-                    <input type="number" id="food_quantity" name="food_quantity" placeholder="ปริมาณอาหาร" min="1" required><br>
+                    <input type="number" id="food_quantity" name="food_quantity" placeholder="ปริมาณอาหาร" min="1" max="1000" required><br>
                 </div>
                 <p><b>ช่วงเวลาการให้อาหาร</b></p>
 
@@ -327,9 +325,7 @@ function redirectToSetting() {
 
 function lineSetting() {
     const catSetting = document.getElementById('catSetting');
-    catSetting.innerHTML = ``
-    const hideCatSettingElement = document.getElementById('hideCatSetting');
-    hideCatSettingElement.innerHTML = `
+    catSetting.innerHTML = `
         <div  style="text-align: center; padding-top: 50px;" id="contrainnerSetting">
             <form id="updateFormLine" action="/insertLine" method="post">
                 <h3 style="text-align: center;"><b style="color: #512da8;">ตั้งค่าการแจ้งเตือน</b></h3>
@@ -352,9 +348,7 @@ function tankSetting() {
     .then(response => response.json())
     .then(data => {
     const catSetting = document.getElementById('catSetting');
-    catSetting.innerHTML = ``
-    const hideCatSettingElement = document.getElementById('hideCatSetting');
-    hideCatSettingElement.innerHTML = `
+    catSetting.innerHTML = `
         <div  style="text-align: center; padding-top: 50px; " id="contrainnerSetting">
             <form id="updateFormTank" action="/insertTank" method="post">
                 <h3 style="text-align: center;"><b style="color: #512da8;">ตั้งค่าถังอาหาร</b></h3>
@@ -370,7 +364,7 @@ function tankSetting() {
                     <div class="tooltip">
                         <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">ใช้สำหรับการตั้งค่าการแจ้งเตือนเมื่อปริมาณอาหารในถัง ${data[0].name_tank} ต่ำกว่าร้อยละ ที่กำหนด</span>
                     </div></label><br>
-                    <input type="number" id="percenTank1" name="percenTank1" placeholder="ร้อยละ" value="${data[0].notification_percen}" min="1" required><br>
+                    <input type="number" id="percenTank1" name="percenTank1" placeholder="ร้อยละ" value="${data[0].notification_percen}" min="1" max="99" required><br>
                 </div><br>
 
                 <div style="padding-top:30px">
@@ -385,7 +379,7 @@ function tankSetting() {
                     <div class="tooltip">
                         <i class="fas fa-info-circle" style="color: #512da8;"></i><span class="tooltiptext">ใช้สำหรับการตั้งค่าการแจ้งเตือนเมื่อปริมาณอาหารในถัง ${data[1].name_tank} ต่ำกว่าร้อยละ ที่กำหนด</span>
                     </div></label><br>
-                    <input type="number" id="percenTank2" name="percenTank2" placeholder="ร้อยละ" value="${data[1].notification_percen}" min="1" required><br>
+                    <input type="number" id="percenTank2" name="percenTank2" placeholder="ร้อยละ" value="${data[1].notification_percen}" min="1"  max="99" required><br>
                 </div><br>
                 
                 <button type="submit" value="Submit">Submit</button>

@@ -1,6 +1,7 @@
 
 body {
-  font-family: "Poppins", sans-serif;
+  font-family: K2D;
+  font-family: 'Maitree', sans-serif;
   background-color: #c9d6ff;
   background: linear-gradient(to right, #e2e2e2, #c9d6ff);
 
@@ -10,11 +11,16 @@ div{
   font-size: 30px;
 }
 canvas {
-  width: 100% !important;  /* Ensures the canvas takes the full width of its container */
+  width: 60% !important;  /* Ensures the canvas takes the full width of its container */
   height: auto !important; /* Maintains the aspect ratio */
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
+
 #currentDateTime {
-  font-size: 24px;
+  font-size: 18px;
   text-align: center;
   margin-top: 20px;
 }
@@ -86,12 +92,11 @@ canvas {
 
 #switchChart{
   text-align: center;
-  font-size: 20px;
-  display: flex;
-  align-content: center;
-  justify-content: space-evenly;
+  font-size: 18px;
+  justify-content: center;
   align-items: center;
 }
+
 
 .switch {
   position: relative;
@@ -149,12 +154,43 @@ input:checked + .slider:before {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  padding: 40px;
+  padding: 20px;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  /* display: block; */
+  width: 60%;
+}
+@media screen and (max-width: 1024px){
+
+  canvas {
+    width: 70% !important;
+    height: auto !important;
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
+@media screen and (max-width: 768px){
+  #blockChart{
+    width: 70%;
+  }
+  
+}
 @media screen and (max-width: 426px) {
   .sidenav {padding-top: 15px;}
   .sidenav a {font-size: 18px;}
+  canvas {
+    width: 90% !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+#blockChart{
+  width: 90%;
+}
 
   #video_feed{
     width: 400px;
