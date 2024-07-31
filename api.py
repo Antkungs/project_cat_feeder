@@ -204,6 +204,50 @@ def insertTank():
             db.rollback()
             return f'Error: {e}'
 
+#insert การกิน
+@app.route('/setEatinformation', methods=['GET'])
+def set_eatinformation():
+    try:
+        # Extract data from query parameters
+        id_cat = request.args.get('ID_Cat')
+        food_give = request.args.get('food_give')
+        food_eat = request.args.get('Food_eat')
+        food_remaining = request.args.get('Food_remaining')
+        timestamp = request.args.get('CurrentTime')
+
+        # Validate parameters
+        if not (id_cat and food_give is not None and food_eat is not None and food_remaining is not None and timestamp):
+            return jsonify({"error": "Missing required parameters"}), 400
+
+        # Connect to database
+        db = connect()
+        cursor = db.cursor()
+
+        # Use parameterized query to prevent SQL injection
+        query = """
+        INSERT INTO eatinformation (ID_Cat, Food_give, Food_eat, Food_remaining, CurrentTime)
+        VALUES (%s, %s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+        Food_give = VALUES(Food_give),
+        Food_eat = VALUES(Food_eat),
+        Food_remaining = VALUES(Food_remaining),
+        CurrentTime = VALUES(CurrentTime)
+        """
+        cursor.execute(query, (id_cat, food_give, food_eat, food_remaining, timestamp))
+        db.commit()
+
+        # Close database connection
+        cursor.close()
+        db.close()
+
+        return jsonify({"message": "Record updated successfully"}), 200
+
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred"}), 500
+        
 #การกินทั้งหมดในเดือนปัจจุบัน
 @app.route('/get_cat_oneMonthInfoGrape/<cat_name>', methods=['GET'])
 def get_cat_oneMonthInfoGrape(cat_name):
