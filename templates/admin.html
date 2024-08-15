@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style2.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <title>admin</title>
+</head>
+<body>
+    <h1 style="color: #512da8;  padding-top: 30px; text-align: center;">Test Admin</h1>
+    <div  style="text-align: center;  padding-top: 30px; display: flex; flex-direction: column;" id="contrainnerSetting">   
+        <p>Test ปุ่ม</p>
+        <div style=" display: flex; justify-content: center;">
+            <a href="#" onclick="button1()"  class="settingCat">ปุ่มที่ 1</a>
+            <a href="#" onclick="button2()"  class="settingCat">ปุ่มที่ 2</a>
+            <a href="#" onclick="button3()"  class="settingCat">ปุ่มที่ 3</a>
+        </div>
+
+        <p>Test Clear status</p>
+        <div style=" display: flex; justify-content: center;">
+            <a href="#" onclick="resetStatusToFalse()"  class="settingCat">ล้างสถานะการกิน False</a>
+            <a href="#" onclick="resetStatusToTrue()"  class="settingCat">ล้างสถานะการกิน True</a>
+        </div>
+    
+        <div style=" display: flex; justify-content: center;">
+            <button type="reset" onclick="redirectToHomePage()"  >Back</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -322,6 +322,10 @@ function redirectToSetting() {
     window.location.href = "/setting";
 }
 
+function redirectToAdmin() {
+    window.location.href = "/admin";
+}
+
 
 function lineSetting() {
     const catSetting = document.getElementById('catSetting');
@@ -388,6 +392,54 @@ function tankSetting() {
         </div>
     `;
     });
+}
+
+function resetStatusToFalse() {
+    fetch('/resetStatusToFalse', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || 'Update status successfully');
+    })
+    .catch((error) => {
+        alert('Update status Failed');
+    });
+    redirectToAdmin()
+}
+
+function resetStatusToTrue() {
+    fetch('/resetStatusToTrue', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || 'Update status successfully');
+    })
+    .catch((error) => {
+        alert('Update status Failed');
+    });
+    redirectToAdmin()
+}
+function button1(){
+    console.log("1");
+    redirectToAdmin()
+}
+
+function button2(){
+    console.log("2");
+    redirectToAdmin()
+}
+
+function button3(){
+    console.log("3");
+    redirectToAdmin()
 }
 
 

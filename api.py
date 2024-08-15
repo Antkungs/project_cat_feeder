@@ -1,10 +1,11 @@
+from aifc import Error
 import cv2 , time ,mysql.connector , Time
 import requests
 from flask import Flask, Response, request, jsonify,render_template
 from flask_cors import CORS
 from datetime import date, datetime, timedelta
 import LineNotifi as line
-import hardwareSelect
+#import hardwareSelect
 from ultralytics import YOLO
 from ultralytics.utils.plotting import Annotator
 
@@ -75,6 +76,9 @@ def setting():
     # Return an error message if the request method is not GET
     return jsonify({"error": "Invalid request"})
 
+@app.route('/admin', methods=['GET'])
+def admin():
+    return render_template('admin.html')
 
 @app.route('/getTank', methods=['GET'])
 def getTank():
@@ -247,7 +251,7 @@ def set_eatinformation():
 
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred"}), 500
-        
+
 #การกินทั้งหมดในเดือนปัจจุบัน
 @app.route('/get_cat_oneMonthInfoGrape/<cat_name>', methods=['GET'])
 def get_cat_oneMonthInfoGrape(cat_name):
@@ -433,13 +437,6 @@ def get_notification():
 
     return jsonify({"error": "Invalid request"})
 
-def update_status():
-    db = connect()
-    cursor = db.cursor()
-    # อัปเดตค่าของ time1_status, time2_status, และ time3_status เป็น FALSE ทุกๆเที่ยงคืน
-    cursor.execute("UPDATE catinformation SET time1_status = FALSE, time2_status = FALSE, time3_status = FALSE")
-    db.commit()
-    cursor.close()
 
 def deleteData(select):
     db = connect()
@@ -458,6 +455,65 @@ def updateID(select):
     db.commit()
     cursor.close()
 
+def update_status():
+    db = connect()
+    cursor = db.cursor()
+    # อัปเดตค่าของ time1_status, time2_status, และ time3_status เป็น FALSE ทุกๆเที่ยงคืน
+    cursor.execute("UPDATE catinformation SET time1_status = FALSE, time2_status = FALSE, time3_status = FALSE")
+    db.commit()
+    cursor.close()
+
+def resetStatusToFalse():
+    """ Reset time statuses to FALSE """
+    db = connect()
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "UPDATE catinformation SET time1_status = FALSE, time2_status = FALSE, time3_status = FALSE"
+        )
+        db.commit()
+        print("Reset status fields successfully.")
+    except Error as e:
+        print(f"Error: {e}")
+        raise
+    finally:
+        cursor.close()
+        db.close()
+
+@app.route('/resetStatusToFalse', methods=['GET'])
+def reset_Status_False():
+    """ Endpoint to manually trigger resetStatusToFalse """
+    try:
+        resetStatusToFalse()
+        return jsonify({"message": "Status fields reset successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+def resetStatusToTrue():
+    """ Reset time statuses to FALSE """
+    db = connect()
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "UPDATE catinformation SET time1_status = TRUE, time2_status = TRUE, time3_status = TRUE"
+        )
+        db.commit()
+        print("Reset status fields successfully.")
+    except Error as e:
+        print(f"Error: {e}")
+        raise
+    finally:
+        cursor.close()
+        db.close()
+
+@app.route('/resetStatusToTrue', methods=['GET'])
+def reset_Status_True():
+    """ Endpoint to manually trigger resetStatusToTrue """
+    try:
+        resetStatusToTrue()
+        return jsonify({"message": "Status fields reset successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 def detect():
     global frame2 , current_time , haveEat
@@ -509,9 +565,11 @@ def detect():
                             if(result1[0].boxes.cls.tolist().count(0) >= 1):
                                 play_loop_time = current_time + 5
                             elif(current_time > play_loop_time):
+                                #hardwareSelect.loadFoodEnd(probs.top1+1)
+                                #sleep(5)
+                                #hardwareSelect.throwAwayFood()
                                 haveEat = False
                             frame2 = frame
-                            #hardwareSelect.throwAwayFood()
                         current_time = time.time()
                         updated_time = current_time + 5
                     else:
@@ -579,7 +637,8 @@ def getTime(select):
                         #เวลาต้องอยู่ระหว่าง start and end staus ต้องเป็น false
                         if start_time <= current_time <= end_time and not status :
                             print("current_time pass")
-                            ### รอเขียน process ทำการส่งค่าเพื่อเรียกใช้ Servo hardwareSelect.giveFood(food_give,id_tank) ปริมาณอาหาร,Servo ที่ต้องหมุน ###
+                            ### รอเขียน process ทำการส่งค่าเพื่อเรียกใช้ Servo 
+                            #hardwareSelect.giveFood(id_cat,food_give,id_tank) ปริมาณอาหาร,Servo ที่ต้องหมุน ###
                             times = idx + 1
                             print(f"Processed ID {select} for time {times}")
                             #เปลี่ยนสถานะ ณ เวลาที่มีการทำงาน  ให้เป็น True เพื่อป้องกันการทำซ้ำอีกรอบ
@@ -598,6 +657,7 @@ def getTime(select):
             print('Error:', response_cat.text)
     except Exception as e:
         print('Error occurred while processing responseCat:', e)
+
 
 def mainapi():
     app.run(host="0.0.0.0", port=3000)
