@@ -6,12 +6,9 @@ import serial
 import serial.tools.list_ports
 import LineNotifi as line
 import time
-import api
-
-led1 = OutputDevice(22)
-led1.off()
-led2 = OutputDevice(27)
-led2.off()
+import RPi.GPIO as GPIO
+import busio
+from adafruit_vl53l0x import VL53L0X
 
 def found_comport():
     global ser_obj
@@ -91,10 +88,39 @@ def switchOnPlace2():
     
 def switchOnPlace3():
     try:
-        api.servoFood()
+        servoFood()
     except Exception as e:
         print('Error occurred while processing responseCat:', e)
 
+def servoFood():
+    sleep(2)
+    try:
+        led3 = OutputDevice(17)
+        led3.off()
+        servo_pwm = PWMOutputDevice(12)
+        led3.on()
+        servo_pwm.value = 0.05
+        sleep(1)
+        servo_pwm.value = 0.16
+        sleep(1)
+        servo_pwm.value = 0.05
+        sleep(1)
+        servo_pwm.value = 0.16
+        sleep(3)
+        servo_pwm.value = 0.05
+        sleep(1)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        led3.off()
+        servo_pwm.close()
+        led3.close()
+        print("Servo Ending")
+
+led1 = OutputDevice(22)
+led1.off()
+led2 = OutputDevice(27)
+led2.off()
 switch1 = Button(20, bounce_time=0.1) 
 switch1.when_released  = switchOnPlace1
 switch2 = Button(21, bounce_time=0.1) 
@@ -477,6 +503,36 @@ def loadFoodEnd(jasonCatInformation):
             ser.close()
         print("Serial connection closed.")
 
+def initialize_sensors():
+    GPIO.setmode(GPIO.BCM)  # Use BCM pin numbering
+    GPIO.setup(14, GPIO.OUT)
+    GPIO.setup(15, GPIO.OUT)
+    GPIO.setup(18, GPIO.OUT)
+    
+    GPIO.output(14, 0)
+    GPIO.output(15, 0)
+    GPIO.output(18, 0)
+    time.sleep(0.5)
+    
+    GPIO.output(14, 1)
+    time.sleep(0.5)
+    vl53_1 = VL53L0X(i2c, address=0x29) # ถัง 1
+    vl53_1.set_address(0x2A)
+    print("setup sensor 1")
+    time.sleep(0.5)
+    GPIO.output(15, 1)
+    time.sleep(0.5)
+    vl53_2 = VL53L0X(i2c, address=0x29) # ถัง 2
+    vl53_2.set_address(0x2B)
+    print("setup sensor 2")
+    time.sleep(0.5)
+    GPIO.output(18, 1)
+    time.sleep(0.5)
+    vl53_3 = VL53L0X(i2c, address=0x29) # ถังเศษอาหาร
+    vl53_3.set_address(0x2C)
+    print("setup sensor 3")
+    return vl53_1, vl53_2, vl53_3
+
 def getData():
     try:
         response = requests.get('http://localhost:3000/getPercenTank')
@@ -497,14 +553,20 @@ def getData():
         print('Error occurred while making request:', e)
     except Exception as e:
         print('Error occurred while processing response:', e)
-
-def is_000100():
-    now = datetime.datetime.now()
-    
-    # Check if the current time is exactly '00:01:00' in 24-hour format
-    if now.hour == 0 and now.minute == 1:
-        return True
-    return False
+         
+def convert_z(value):
+    try:
+        max_cm = 29
+        min_cm = 19
+        if value >= max_cm:
+            value = 29
+        elif value <= min_cm:
+            value = 19
+        return (((value-max_cm)/(min_cm-max_cm))*100)
+    except ValueError as e:
+        print(f"Error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 def changePercen(x,y):
     Width = 20
@@ -516,15 +578,28 @@ def changePercen(x,y):
     y = (((Width*longs)*y)*100)/cubicVolume
     return int(x),int(y)
 
+
+def is_000100():
+    now = datetime.datetime.now()
+    
+    # Check if the current time is exactly '00:01:00' in 24-hour format
+    if now.hour == 0 and now.minute == 1:
+        return True
+    return False
+
+i2c = busio.I2C(3, 2)
+
 def mainHw():
     
-    ultrasonic1 = DistanceSensor(echo=27, trigger=22)  # Sensor 1
-    #ultrasonic2 = DistanceSensor(echo=5, trigger=6)  # Sensor 2
-    #ultrasonic3 = DistanceSensor(echo=12, trigger=16)
+    vl53_1, vl53_2, vl53_3 = initialize_sensors()
+    vl53_1.measurement_timing_budget = 100000
+    vl53_2.measurement_timing_budget = 100000
+    vl53_3.measurement_timing_budget = 100000
+
     status = {
-        'x': False,
-        'y': False,
-        'z': False
+    'x': False,
+    'y': False,
+    'z': False
     }
 
     xfuture_time = None
@@ -535,97 +610,108 @@ def mainHw():
     do_time = current_time + datetime.timedelta(seconds=15)
 
     while True:
-        current_time = datetime.datetime.now()
-        if current_time >= do_time:
-            do_time = current_time + datetime.timedelta(seconds=30)
-            hour , tank = getData()
-            hour = hour[0]
-            if  boolHourCheck == False:
-                hourCheck = hour
-                boolHourCheck = True
-            if hourCheck != hour:
-                print("Change Time")
-                boolHourCheck = False
-                if xfuture_time != None:
-                    xfuture_time = current_time + timeLoop
-                    print("Change x")
-                if yfuture_time != None:
-                    yfuture_time = current_time + timeLoop
-                    print("Change y")
-                if zfuture_time != None:
-                    zfuture_time = current_time + timeLoop
-                    print("Change z")
-            sec = hour * 60 * 60
-            timeLoop = datetime.timedelta(seconds=sec)
-            #inout sensor ultrasonic
-            x = ultrasonic1.distance * 100 
-            y = 9 #ultrasonic2.distance * 100
-            z = 5 #1ultrasonic3.distance * 100
-            print("\n\ncheck\n")
-            print(f"x {x} Cm\ny {y} Cm")
-            # % เมื่อต้องกาารแจ้งเตือน get api
-            Notification = {
-            'x' : tank[0]['notification_percen'],
-            'y' : tank[1]['notification_percen'],
-            'z' : 85
-            }
-            x , y = changePercen(x,y)
+        try:
             current_time = datetime.datetime.now()
-            print(f"x {x} % : Notification {Notification['x']} %\ny {y} % : Notification {Notification['y']} %")
-            print(f"{hour} hour")
+            if current_time >= do_time:
+                do_time = current_time + datetime.timedelta(seconds=30)
+                hour , tank = getData()
+                hour = hour[0]
+                if  boolHourCheck == False:
+                    hourCheck = hour
+                    boolHourCheck = True
+                if hourCheck != hour:
+                    print("Change Time")
+                    boolHourCheck = False
+                    if xfuture_time != None:
+                        xfuture_time = current_time + timeLoop
+                        print("Change x")
+                    if yfuture_time != None:
+                        yfuture_time = current_time + timeLoop
+                        print("Change y")
+                    if zfuture_time != None:
+                        zfuture_time = current_time + timeLoop
+                        print("Change z")
+                sec = hour * 60 * 60
+                timeLoop = datetime.timedelta(seconds=sec)
+                #input sensor
+                try:
+                    xcm = (vl53_1.range / 10) - 3.5
+                    ycm = (vl53_2.range / 10)
+                    zcm = (vl53_3.range / 10) - 3
+                except Exception as e:
+                    print("Sensor reading error:", e)
+                    vl53_1, vl53_2, vl53_3 = initialize_sensors()
+                print("\n\ncheck\n")
+                # % เมื่อต้องกาารแจ้งเตือน get api
+                Notification = {
+                'x' : tank[0]['notification_percen'],
+                'y' : tank[1]['notification_percen'],
+                'z' : 80
+                }
+                x , y = changePercen(xcm,ycm)
+                z = convert_z(zcm)
+                current_time = datetime.datetime.now()
+                print(f"x {x} % : Notification {Notification['x']} %\ny {y} % : Notification {Notification['y']} %\nz {z} % : Notification {Notification['z']} %")
+                print(f"{hour} hour")
 
-            if Notification['x'] < x:
-                status['x'] = False
-                xfuture_time = None
-            if Notification['x'] >= x:
-                if Notification['x'] >= x and status['x'] == False:
-                    status['x'] = True
-                    current_time = datetime.datetime.now()
-                    xfuture_time = current_time + timeLoop
-                    print(f"X Notification")
-                    line.sendTankLow(1)
-                elif current_time >= xfuture_time:
-                    print("X Notification Again")
-                    line.sendTankLow(1)
-                    xfuture_time = current_time + timeLoop
+                if x > Notification['x']:
+                    status['x'] = False
+                    xfuture_time = None
+                if x <= Notification['x']:
+                    if Notification['x'] >= x and status['x'] == False:
+                        status['x'] = True
+                        current_time = datetime.datetime.now()
+                        xfuture_time = current_time + timeLoop
+                        print(f"X Notification")
+                        line.sendTankLow(1)
+                    elif current_time >= xfuture_time:
+                        print("X Notification Again")
+                        line.sendTankLow(1)
+                        xfuture_time = current_time + timeLoop
 
-            if Notification['y'] < y:
-                status['y'] = False
-                yfuture_time = None
-            if Notification['y'] >= y:
-                if Notification['y'] >= y and status['y'] == False:
-                    status['y'] = True
-                    current_time = datetime.datetime.now()
-                    yfuture_time = current_time + timeLoop
-                    print(f"Y Notification")
-                    line.sendTankLow(2)
-                elif current_time >= yfuture_time:
-                    print("Y Notification Again")
-                    line.sendTankLow(2)
-                    yfuture_time = current_time + timeLoop
+                if Notification['y'] < y:
+                    status['y'] = False
+                    yfuture_time = None
+                if Notification['y'] >= y:
+                    if Notification['y'] >= y and status['y'] == False:
+                        status['y'] = True
+                        current_time = datetime.datetime.now()
+                        yfuture_time = current_time + timeLoop
+                        print(f"Y Notification")
+                        line.sendTankLow(2)
+                    elif current_time >= yfuture_time:
+                        print("Y Notification Again")
+                        line.sendTankLow(2)
+                        yfuture_time = current_time + timeLoop
 
-            if Notification['z'] > z:
-                status['z'] = False
-                zfuture_time = None
-            if Notification['z'] <= z:
-                if Notification['z'] <= z and status['z'] == False:
-                    status['z'] = True
-                    current_time = datetime.datetime.now()
-                    zfuture_time = current_time + timeLoop
-                    print(f"Z Notification")
-                    line.sendTankFull()
-                elif current_time >= zfuture_time:
-                    print("Z Notification Again")
-                    line.sendTankFull()
-                    zfuture_time = current_time + timeLoop
-        else:
-            if is_000100():
-                print("reset time")
-                api.resetStatusToFalse()
+                if Notification['z'] > z:
+                    status['z'] = False
+                    zfuture_time = None
+                if Notification['z'] <= z:
+                    if Notification['z'] <= z and status['z'] == False:
+                        status['z'] = True
+                        current_time = datetime.datetime.now()
+                        zfuture_time = current_time + timeLoop
+                        print(f"Z Notification")
+                        line.sendTankFull()
+                    elif current_time >= zfuture_time:
+                        print("Z Notification Again")
+                        line.sendTankFull()
+                        zfuture_time = current_time + timeLoop
+            else:
+                if is_000100():
+                    print("reset time")
+                    #api.resetStatusToFalse()
 
-            #print("do nothing")
+                #print("do nothing")
+            time.sleep(0.5)
+        except KeyboardInterrupt:
+            print("Script terminated by user")
+            break
+        except Exception as e:
+            print("An unexpected error occurred:", e)
+            time.sleep(2)
 
-        time.sleep(0.5)
 """
 def cleanup():
     # Properly close GPIO resources

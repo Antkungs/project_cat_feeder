@@ -59,18 +59,18 @@ try:
         import api , hardwareSelect 
         thread1 = threading.Thread(target=api.detect)
         thread2 = threading.Thread(target=api.mainapi)
-        thread3 = threading.Thread(target=hardwareSelect)
+        thread3 = threading.Thread(target=hardwareSelect.mainHw)
         #thread1.daemon = True
         #thread2.daemon = True
-
 
         thread1.start()
         thread2.start()
         thread3.start()
-        
+        # Wait for all threads to complete
         thread1.join()
         thread2.join()
         thread3.join()
+
     except Exception as e:
         print(f"Error: {e}")
 except Exception as e:

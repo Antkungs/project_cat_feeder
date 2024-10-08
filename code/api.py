@@ -788,17 +788,9 @@ def lineTest():
         return jsonify({"error": str(e)}), 500
 
 def detect():
-
-    try:
-        ip = get_ip_address()
-        url = f"\nWeb Application\nhttp://{ip}:{3000}"
-        line.send_text(url)
-    except Exception as e:
-        print(f"Error: {e}")
-
     global frame2 , current_time , haveEat
-    model = YOLO(r"/home/antkung/Desktop/projects1/code/model/catver1.2.pt")
-    model2 = YOLO(r"/home/antkung/Desktop/projects1/code/model/classver4.pt") #model หาแมว
+    model = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/catver1.2.pt")
+    model2 = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/classver4.pt") #model หาแมว
     cap = cv2.VideoCapture(0)
     current_time = time.time()
     updated_time = current_time + 5
@@ -839,7 +831,7 @@ def detect():
                 if not findCat1:
                     findCat1 = True  # Set flag that 1 cat has been detected
                     current_time = time.time()
-                    updated_time = current_time + 2  # Set the time 2 seconds from now
+                    updated_time = current_time + 1  # Set the time 2 seconds from now
                     # Check if the timer has passed 2 seconds after detecting 1 cat
                 elif findCat1 and updated_time and current_time >= updated_time: #เช็คแมวว่ามี 1 ตัว
                     result2 = model2(frame) 
@@ -1084,4 +1076,4 @@ def get_ip_address():
 def mainapi():
     app.run(host="0.0.0.0", port=3000)
 
-mainapi()
+#mainapi()
