@@ -1,0 +1,251 @@
+body {
+  background-color: #ede7f6;
+  font-family: 'Poppins', sans-serif;
+  color: #666;
+  }
+
+i{
+  color: #666;
+  opacity: 30%;
+}
+
+.line-time{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.line{
+  border: 1px solid #666;
+  padding: 15px;
+  border-radius: 8px;
+  margin: auto;
+  width: fit-content;
+  margin-bottom: 10px;
+  display: flex;
+}
+.settingCat {
+  text-align: center;
+  background-color: #f4f4f9;
+  margin: 5px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 2px; /* Rounded corners */
+  overflow: hidden;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  text-decoration: none;
+  color: #666;
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition effects */
+  }
+
+  
+  .settingCat{
+    --color: #512da8;
+    font-family: inherit;
+    display: inline-block;
+    z-index: 1;
+    color: var(--color);
+    border: 2px solid var(--color);
+    border-radius: 6px;
+    position: relative;
+  }
+  .settingCat::before {
+    position: absolute;
+    content: "";
+    background: var(--color);
+    width: 200%;
+    height: 200px;
+    z-index: -1;
+    border-radius: 20%;
+  }
+  
+  .settingCat:hover {
+    color: white;
+  }
+  
+  .settingCat:before {
+    top: 100%;
+    left: 100%;
+    transition: 0.3s all;
+  }
+  
+  .settingCat:hover::before {
+    top: -30px;
+    left: -30px;
+  }
+  
+
+input[type="text"],[type="time"],[type="date"],[type="select"],[type="number"]{
+  padding: 8px;
+  margin: 5px;
+  border-radius: 2px;
+  border: none;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  width: 130px;
+}
+
+
+input[type="radio"],.tank{
+  padding: 8px;
+  margin: 10px;
+  accent-color: #512da8;
+}
+
+
+button[type="submit"]{
+  --color: #512da8;
+  font-family: inherit;
+  display: inline-block;
+  width: 6em;
+  height: 2.6em;
+  line-height: 2.5em;
+  overflow: hidden;
+  cursor: pointer;
+  margin: 20px;
+  font-size: 17px;
+  z-index: 1;
+  color: var(--color);
+  border: 2px solid var(--color);
+  border-radius: 6px;
+  position: relative;
+}
+
+
+button[type="reset"]{
+  --color: red;
+  font-family: inherit;
+  display: inline-block;
+  width: 6em;
+  height: 2.6em;
+  line-height: 2.5em;
+  overflow: hidden;
+  cursor: pointer;
+  margin: 20px;
+  font-size: 17px;
+  z-index: 1;
+  color: var(--color);
+  border: 2px solid var(--color);
+  border-radius: 6px;
+  position: relative;
+}
+
+button::before {
+  position: absolute;
+  content: "";
+  background: var(--color);
+  width: 150px;
+  height: 200px;
+  z-index: -1;
+  border-radius: 50%;
+}
+
+button:hover {
+  color: white;
+}
+
+button:before {
+  top: 100%;
+  left: 100%;
+  transition: 0.3s all;
+}
+
+button:hover::before {
+  top: -30px;
+  left: -30px;
+}
+
+#contrainnerSetting{
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  padding: 20px;
+  margin: auto;
+  width: fit-content;
+}
+
+.tooltip {
+  position: relative; /* ทำให้ element ที่เป็น parent ของ tooltip */
+  display: inline-block; /* เพื่อให้ tooltip ทำงานเมื่อชี้ */
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden; /* ซ่อน tooltip โดยเริ่มต้น */
+  width: 250px; /* ความกว้างของ tooltip */
+  background-color: rgb(0, 0, 0); /* สีพื้นหลังของ tooltip */
+  color: #fff; /* สีข้อความ */
+  text-align: center; /* จัดข้อความกลาง */
+  border-radius: 5px; /* มุมโค้งมน */
+  padding: 5px 0; /* ระยะห่างภายใน */
+  position: absolute; /* ตำแหน่ง tooltip */
+  z-index: 1; /* ให้แน่ใจว่า tooltip อยู่ด้านบนสุด */
+  bottom: 100%; /* ตำแหน่งจากด้านล่างของ parent */
+  margin-left: -60px; /* ปรับตำแหน่งเพื่อให้ tooltip กลางกับไอคอน */
+  opacity: 0; /* ซ่อน tooltip */
+  transition: opacity 0.3s; /* การเปลี่ยนแปลงความโปร่งใส */
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible; /* แสดง tooltip เมื่อชี้ */
+  opacity: 0.8; /* เปลี่ยนความโปร่งใสให้เห็นได้ชัด */
+}
+
+@media screen and (max-width: 1988) { 
+
+
+}
+@media screen and (max-width: 1440px) { 
+
+}
+
+@media screen and (max-width: 1024px) { 
+
+  body{
+
+    font-size: 80%;
+  }
+
+}
+@media screen and (max-width: 768px) { 
+
+  body{
+    font-size: 80%;
+  }
+
+
+}
+
+@media screen and (max-width: 500px) { 
+  body{
+    font-size: 80%;
+  }
+}
+
+@media screen and (max-width: 425px){
+  .tooltip .tooltiptext {
+    visibility: hidden; /* ซ่อน tooltip โดยเริ่มต้น */
+    width: 150px; /* ความกว้างของ tooltip */
+    background-color: rgb(0, 0, 0); /* สีพื้นหลังของ tooltip */
+    color: #fff; /* สีข้อความ */
+    text-align: center; /* จัดข้อความกลาง */
+    border-radius: 5px; /* มุมโค้งมน */
+    padding: 5px 0; /* ระยะห่างภายใน */
+    position: absolute; /* ตำแหน่ง tooltip */
+    z-index: 1; /* ให้แน่ใจว่า tooltip อยู่ด้านบนสุด */
+    bottom: 100%; /* ตำแหน่งจากด้านล่างของ parent */
+    margin-left: -60px; /* ปรับตำแหน่งเพื่อให้ tooltip กลางกับไอคอน */
+    opacity: 0; /* ซ่อน tooltip */
+    transition: opacity 0.3s; /* การเปลี่ยนแปลงความโปร่งใส */
+  }
+  .line {
+    border: 1px solid #666;
+    padding: 15px;
+    border-radius: 8px;
+    margin: auto;
+    width: fit-content;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+}
+}
+

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Grape Info Example</title>
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <label for="catName">Select a Category:</label>
+    <select id="catName">
+        <option value="exampleCat">Example Category</option>
+        <!-- Add more options as needed -->
+    </select>
+    <!--switch toggle -->
+    <br><br>
+    <label class="switch">
+        <input type="checkbox" id="infoToggle">
+        <span class="slider"></span>
+    </label>
+    <label for="infoToggle">All Info</label>
+
+    <br><br>
+    <button onclick="showGrape()">Show Grape Info</button>
+
+    <script>
+        function showGrape() {
+            const catName = document.getElementById('catName').value;
+            const infoToggle = document.getElementById('infoToggle');
+
+            let infoType = infoToggle.checked ? 'allInfo' : 'oneMonth';
+            let url = '/get_cat_' + infoType + 'InfoGrape/' + catName;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response:', data);
+                    // Handle the data as needed
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+    </script>
+</body>
+</html>

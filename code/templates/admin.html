@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style2.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <title>admin</title>
+    <style>
+        * {
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+        #currentDateTime{
+            text-align: center; 
+        }
+        body {
+            background-color: #f4f4f4; /* Optional background color */
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2 {
+            color: #512da8; /* Heading color */
+            text-align: center; /* Center align headings */
+        }
+
+        ul {
+            list-style-type: none; /* Remove default list styling */
+            padding: 0; /* Remove padding */
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: auto;
+            width: 70%;
+        }
+
+        th, td {
+            padding: 12px; /* Add padding */
+            border: 1px solid #512da8; /* Border color */
+            text-align: left; /* Align text to the left */
+        }
+
+        th {
+            background-color: #512da8; /* Background color for table header */
+            color: white; /* Text color for header */
+        }
+
+        tr:nth-child(even) {
+            background-color: #e0e0e0; /* Alternate row color */
+        }
+
+        /* Tooltip styling */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #512da8;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the tooltip */
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem; /* Adjust heading size on smaller screens */
+            }
+
+            h2 {
+                font-size: 1.5rem; /* Adjust heading size on smaller screens */
+            }
+
+            th, td {
+                padding: 10px; /* Smaller padding for smaller screens */
+            }
+
+            table {
+                display: block; /* Allow horizontal scrolling */
+                overflow-x: auto; /* Add horizontal scrolling */
+                white-space: nowrap; /* Prevent table contents from wrapping */
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem; /* Further adjust heading size */
+            }
+
+            h2 {
+                font-size: 1.2rem; /* Further adjust heading size */
+            }
+
+            th, td {
+                padding: 8px; /* Smaller padding for mobile */
+            }
+
+            .tooltiptext {
+                width: auto; /* Tooltip width adjusts for small screens */
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <body>
+        <h1>Admin Panel</h1>
+    
+        <!-- Cat Information -->
+        <h2>Cat Information</h2>
+        <div id="currentDateTime" ></div>
+        <h2>Cat Information</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cat ID</th>
+                    <th>Name</th>
+                    <th>Food Quantity</th>
+                    <th>Tank ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in cats %}
+                <tr>
+                    <td>{{ cat[0] }}</td>
+                    <td>{{ cat[1] }}</td>
+                    <td>{{ cat[2] }}</td>
+                    <td>{{ cat[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Tanks</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tank ID</th>
+                    <th>Tank Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tank in tanks %}
+                <tr>
+                    <td>{{ tank[0] }}</td>
+                    <td>{{ tank[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
+    
+        <!-- Feeding Times -->
+        <h2>Feeding Times</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cat ID</th>
+                    <th>Time 1 Start</th>
+                    <th>Time 1 End</th>
+                    <th>Time 2 Start</th>
+                    <th>Time 2 End</th>
+                    <th>Time 3 Start</th>
+                    <th>Time 3 End</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in cats %}
+                <tr>
+                    <td>{{ cat[0] }}</td>
+                    <td>{{ cat[4] }}</td>
+                    <td>{{ cat[5] }}</td>
+                    <td>{{ cat[6] }}</td>
+                    <td>{{ cat[7] }}</td>
+                    <td>{{ cat[8] }}</td>
+                    <td>{{ cat[9] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
+        <!-- Feeding Status -->
+        <h2>Feeding Status</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cat ID</th>
+                    <th>Time 1 Status</th>
+                    <th>Time 2 Status</th>
+                    <th>Time 3 Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in cats %}
+                <tr>
+                    <td>{{ cat[0] }}</td>
+                    <td>{{ cat[10] }}</td>
+                    <td>{{ cat[11] }}</td>
+                    <td>{{ cat[12] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    <h1 style="color: #512da8;  padding-top: 30px; text-align: center;">Test Admin</h1>
+    <div  style="text-align: center;  padding-top: 30px; display: flex; flex-direction: column;     margin-bottom: 20px;" id="contrainnerSetting">   
+        <p>Test ปุ่ม</p>
+        <div style=" display: flex; justify-content: center;">
+            <a href="#" onclick="button1()"  class="settingCat">ปุ่มที่ 1</a>
+            <a href="#" onclick="button2()"  class="settingCat">ปุ่มที่ 2</a>
+            <a href="#" onclick="button3()"  class="settingCat">ปุ่มที่ 3</a>
+        </div>
+        <p>Test Give Food</p>
+        <div style=" display: flex; justify-content: center;     flex-direction: column;">
+            <div class="range">
+                <div class="ranges">
+                    <input type="range" min="1" max="200" value="0" id="range" />
+                    <div class="value">0</div> 
+                </div>
+                <div class="submitGiveFood">
+                    <a href="#" onclick="button4(1)"  class="settingCat">Tank 1</a>
+                    <a href="#" onclick="button4(2)"  class="settingCat">Tank 2</a>
+                </div>
+            </div>
+        <script>
+            const sliderEl = document.querySelector("#range");
+            const sliderValue = document.querySelector(".value");
+            sliderEl.addEventListener("input", (event) => {
+            const tempSliderValue = event.target.value;   
+            sliderValue.textContent = tempSliderValue; 
+            const progress = (tempSliderValue / sliderEl.max) * 100;
+            sliderEl.style.background = `linear-gradient(to right, #512da8 ${progress}%, #ccc ${progress}%)`;
+            });
+
+        </script>
+        <p>Test Function</p>
+        <div style=" display: flex; justify-content: center;     flex-direction: column;">
+            <a href="#" onclick="buttonLine()" class="settingCat">Line Notification</a>
+        </div>
+        <p>Test Clear status</p>
+        <div style=" display: flex; justify-content: center;     flex-direction: column;">
+            <a href="#" onclick="resetStatusToFalse()"  class="settingCat">ล้างสถานะการกิน False</a>
+            <a href="#" onclick="resetStatusToTrue()"  class="settingCat">ล้างสถานะการกิน True</a>
+        </div>
+    
+        <div style=" display: flex; justify-content: center;">
+            <button type="reset" onclick="redirectToHomePage()"  >Back</button>
+        </div>
+    </div>
+</body>
+<script>
+    displayCurrentDateTime(true);
+</script>
+<script>
+    function formatDate(date) {
+        let d = new Date(date);
+        let month = ('0' + (d.getMonth() + 1)).slice(-2); // Adds leading 0 if necessary
+        let day = ('0' + d.getDate()).slice(-2);
+        let year = d.getFullYear();
+        return `${year}-${month}-${day}`;
+    }
+
+    let today = new Date();
+    let firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    let lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    document.getElementById('startDate').value = formatDate(firstDayOfMonth);
+    document.getElementById('endDate').value = formatDate(lastDayOfMonth);
+    
+</script>
+</html>

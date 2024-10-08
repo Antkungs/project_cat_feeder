@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@latest"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <title>Cat Feeder</title>
+  </head>
+  <body>
+
+
+    <div id="mySidenav" class="sidenav">
+      <a href="/">หน้าแรก</a>
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times; </a>
+      {% for cat_name in cat_names %}
+        <a href="#" onclick="showCatInfo('{{ cat_name }}'),closeNav()"><b>{{ cat_name }}</b></a>
+      {% endfor %}
+      <a href="{{ url_for('setting') }}">ตั้งค่าพื้นฐาน</a>
+    </div>
+    <span style="font-size:20px;cursor:pointer" onclick="openNav()" class="lineColor">&#9776; </span>
+  <div id="contrainnerInfo">
+      <b><div id="catName" style="text-align: center; color:#512da8"></div></b>
+      <div style="text-align: center;">
+        <b id="tageTitle" style="color:#512da8">Webcam Camera</b>
+      </div>
+      <div id="currentDateTime" ></div>
+      <div id="contrainnerInfo">
+        <div id="blockChart">
+          <!--switch toggle -->
+          <div id="switchChart" style="display: none;">
+              <label for="startDate" class="left-text">จากวันที่:</label>
+              <input type="date" id="startDate" onchange="toggleCharts()">
+              
+              <label for="endDate" class="right-text">ถึงวันที่:</label>
+              <input type="date" id="endDate" onchange="toggleCharts()">
+          </div>
+        
+          <canvas id="chartAll"></canvas>
+        </div>
+        <div id="catInfo" class="catInfo" ></div><br>
+
+        <!--My chart -->
+      </div>
+    
+      <div class="webCam"> 
+        <img id="video_feed" src="{{ url_for('video_feed') }}">
+      </div> 
+
+  </div>
+
+  </body>
+  <script>
+    displayCurrentDateTime(true);
+    
+  </script>
+  <script>
+function formatDate(date) {
+    let d = new Date(date);
+    let month = ('0' + (d.getMonth() + 1)).slice(-2); // Adds leading 0 if necessary
+    let day = ('0' + d.getDate()).slice(-2);
+    let year = d.getFullYear();
+    return `${year}-${month}-${day}`;
+}
+
+// Get today's date
+let today = new Date();
+
+// Calculate the first day of the current month
+let firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+// Calculate the last day of the current month
+let lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+// Set the values of the input fields
+document.getElementById('startDate').value = formatDate(firstDayOfMonth);
+document.getElementById('endDate').value = formatDate(lastDayOfMonth);
+    
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    // Variable to store the previous valid end date
+    let previousValidEndDate = '';
+
+    // Function to update the state of the endDate input
+    function updateEndDateState() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+
+        // Check if both dates are valid and endDate is not greater than startDate
+        if (startDateInput.value && endDateInput.value && endDate < startDate) {
+            // Set custom validation message
+            endDateInput.setCustomValidity('End date must be greater than start date.');
+            endDateInput.reportValidity();
+            
+            // Revert to the previous valid end date
+            endDateInput.value = previousValidEndDate;
+        } else {
+            // Clear validation message
+            endDateInput.setCustomValidity('');
+            endDateInput.reportValidity();
+            
+            // Update the previous valid end date
+            previousValidEndDate = endDateInput.value;
+        }
+        
+        // Disable endDate input if startDate is not set
+        endDateInput.disabled = !startDateInput.value;
+    }
+
+    // Add event listeners
+    startDateInput.addEventListener('change', updateEndDateState);
+    endDateInput.addEventListener('change', updateEndDateState);
+
+    // Initialize the state on page load
+    updateEndDateState();
+});
+</script>
+</html>
