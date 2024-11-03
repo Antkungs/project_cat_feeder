@@ -23,10 +23,8 @@ def connect():
     try:
         db = mysql.connector.connect(
             host="localhost",
-            #user="admin",
-            user="admin",
-            #password="admin",
-            password="admin",
+            user="USERNAME",
+            password="PASSWORD",
             database="projectcat"
         )
         if db.is_connected():
@@ -300,11 +298,7 @@ def insert_data(id_cat):
                 window.location.href = '/setting';
             </script>
             """
-
-    
-        
-       
-     
+            
 @app.route('/insertLineFirstTime', methods=['POST'])
 def insertLineFirstTime():
     if request.method == 'POST':
@@ -868,14 +862,14 @@ def add_cat_detection():
 
 def detect():
     global frame2 , current_time , haveEat
-    model = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/catver0.2.pt")
-    model2 = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/best.pt") #model หาแมว
+    model = YOLO(r"/home/USER/Desktop/project_cat_feeder/code/model/catver0.2.pt") #model นับจำนวนแมว
+    model2 = YOLO(r"/home/USER/Desktop/project_cat_feeder/code/model/best.pt") #model หาแมว
     cap = cv2.VideoCapture(0)
     current_time = time.time()
     updated_time = current_time + 5
     findCat1 = False
     
-    skip_frame_count = 10 # Skip 5 frames, meaning every 6th frame will be processed
+    skip_frame_count = 10 # Skip 10 frames, meaning every 6th frame will be processed
     frame_counter = 0
 
     while True:
@@ -1070,89 +1064,6 @@ def getTime(select):
             print(f'Error: {response_cat.status_code} - {response_cat.text}')
     except Exception as e:
         print('Error occurred while processing responseCat:', e)
-"""
-def getTime(select):
-    try:
-        global haveEat
-        time_data = []
-        response_cat = requests.get('http://localhost:3000/catinformation')
-        if response_cat.status_code == 200:
-            cats = response_cat.json()  # รับข้อมูลทั้งหมดจาก API
-            for cat in cats:  # loop เช็ค
-                #เช็คไอดีให้ตรงกับค่าที่ส่งมา
-                if cat['id_cat'] == select:
-                    
-                    id_cat = cat['id_cat']
-                    name = cat['name_cat']# ดึงชื่อแมว
-
-                    food_give = cat['food_give']#อาหารที่จะให้(กรัม)
-                    id_tank = cat['id_tank']#ไอดี tank (Servo select)
-                    #เวลามื้อที่ 1,2,3 และ สถานะการกิน
-                    jasonCatInformation = {
-                        'idCat': id_cat,
-                        'nameCat': name,
-                        'foodGive': food_give,
-                        'idTank': id_tank
-                    }
-                    
-                    time_data = [
-                        #มื้อที่ 1
-                        {'start': datetime.strptime(cat['time1_start'], "%H:%M:%S").time(),
-                        'end': datetime.strptime(cat['time1_end'], "%H:%M:%S").time(),
-                        'status': cat['time1_status']},
-                        #มื้อที่ 2
-                        {'start': datetime.strptime(cat['time2_start'], "%H:%M:%S").time(),
-                        'end': datetime.strptime(cat['time2_end'], "%H:%M:%S").time(),
-                        'status': cat['time2_status']},
-                        #มื้อที่ 3
-                        {'start': datetime.strptime(cat['time3_start'], "%H:%M:%S").time(),
-                        'end': datetime.strptime(cat['time3_end'], "%H:%M:%S").time(),
-                        'status': cat['time3_status']}
-                    ]
-                    
-                    current_time = datetime.now().time() #เวลาปัจจุบัน
-                    print(f"ID : {jasonCatInformation['idCat']}\nName : {jasonCatInformation['nameCat']}\nfoodGive : {jasonCatInformation['foodGive']}\nidTank : {jasonCatInformation['idTank']}\nCurrent Time : {current_time}\n")
-                    ### loop เก็บค่าเวลาและสถานะการกิน idx = มื้อ 
-                    print("status eat")
-                    ### loop เก็บค่าเวลาและสถานะการกิน idx = มื้อ 
-                    for idx, data in enumerate(time_data):
-                        start_time = data['start']
-                        end_time = data['end']
-                        status = data['status']
-                    
-                        ### เช็คสถานะเวลาและการกินว่ากินไปหรือยัง ถ้ายังให้ทำอะไรก็ได้และตั้งค่าสถานะว่ากินไปแล้ว ###
-                        #เวลาต้องอยู่ระหว่าง start and end staus ต้องเป็น false
-                        if start_time <= current_time <= end_time and not status :
-                            print("current_time pass")
-                            
-                            ### process ทำการส่งค่าเพื่อเรียกใช้ Servo hardwareSelect.giveFood(id_cat,catName,food_give,id_tank) ปริมาณอาหาร,Servo ที่ต้องหมุน ###
-                            jasonCatInformation = hardwareSelect.loadCell(jasonCatInformation)
-                        
-                            times = idx + 1
-                            print(f"Processed ID {select} for time {times}")
-
-                            #เปลี่ยนสถานะ ณ เวลาที่มีการทำงาน  ให้เป็น True เพื่อป้องกันการทำซ้ำอีกรอบ
-                            requests.get(f'http://localhost:3000/setstatus?id={select}&time={times}&status={True}')
-
-                            ### แจ้งเตือนไลน์ ว่าตัวไหนมากิน ###
-                            current_time_string = current_time.strftime("%H:%M:%S")
-                            try:
-                                line.sendCatEat(name , current_time_string)
-                            except:
-                                print("Line Erre")
-                            ### แจ้งเตือนไลน์ ###
-
-                            haveEat = True
-                            return jasonCatInformation
-                        else:
-                            #ไม่มีเวลาการกิน
-                            print("not in time")
-                            return "nothing"
-        else:
-            print('Error:', response_cat.text)
-    except Exception as e:
-        print('Error occurred while processing responseCat:', e)
-"""
 
 def get_ip_address():
     try:
