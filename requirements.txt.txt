@@ -1,0 +1,9 @@
+opencv-python
+Flask
+Flask-Cors
+mysql-connector-python
+requests
+gpiozero
+RPi.GPIO
+adafruit-circuitpython-vl53l0x
+ultralytics
