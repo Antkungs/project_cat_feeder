@@ -30,7 +30,7 @@ def read_credentials_from_file(file_path):
 def runThread():
     try:
         led.on()
-        command = f'/usr/bin/python3 /home/antkung/Desktop/project_cat_feeder/code/runThread.py'
+        command = f'/usr/bin/python3 /home/USER/Desktop/project_cat_feeder/code/runThread.py'
         result = subprocess.run(command, shell=True)
         print("Output:\n", result.stdout)
     except subprocess.CalledProcessError as e:
