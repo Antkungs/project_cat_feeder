@@ -62,6 +62,9 @@ function showCatInfo(catName) {
             switchChart.style.display = 'flex';
             const blockChart = document.getElementById('blockChart');
             blockChart.style.display = 'block';
+            // Display cat images if available
+
+            
 
 
             if (data.error) {
@@ -222,8 +225,6 @@ function showGrapeAll(catName, startDate, endDate) {
         })
         .catch(error => console.error('Error:', error));
 }
-
-
 function catSetting(id) {
     fetch(`/settingCat/${id}`)
         .then(response => response.json())
@@ -235,16 +236,21 @@ function catSetting(id) {
             catSetting.innerHTML = catData.map(cat => `
             <div style="padding: 20px;" id="containerSetting">
                 <h3><b style="color: #512da8;">แก้ไขรายละเอียดแมว ${cat.name_cat}</b></h3>
-                <form id="updateForm" action="/insertData/${cat.id_cat}" method="post">
-                    
+                <form id="updateForm" action="/insertData/${cat.id_cat}" method="POST"  enctype="multipart/form-data">
+                    <div>
+                        <img id="existingImage" src="/static/images/cat${cat.id_cat}.jpg" alt="Current Cat Image" style="max-width: 200px; max-height: 200px;">
+                    </div>
+                                        
+
+                    <!-- File input for new image -->
                     <div style="padding-top: 20px;">
                         <label for="name"><b>ตั้งค่าชื่อแมว</b></label><br>
                         <input type="text" id="name" name="name" value="${cat.name_cat}" placeholder="name" required><br>
                     </div>
                 
                     <div style="padding-top: 20px;">
-                        <label for="food_quantity"><b>ปริมาณอาหารต่อมื้อ (10 - 120 กรัม)</b></label><br>
-                        <input type="number" id="food_quantity" name="food_quantity" placeholder="ปริมาณอาหาร" min="10" max="120" value="${cat.food_give}" required><br>
+                        <label for="food_quantity"><b>ปริมาณอาหารต่อมื้อ (กรัม)</b></label><br>
+                        <input type="number" id="food_quantity" name="food_quantity" placeholder="ปริมาณอาหาร" min="10" max="200" value="${cat.food_give}" required><br>
                     </div>
 
                     <p><b>ช่วงเวลาการให้อาหาร</b></p>
@@ -298,6 +304,23 @@ function catSetting(id) {
                             </div>
                         `).join('')}
                     </div>
+
+            
+                    <br>
+                    <div>
+                        <div>
+                        <label for="food_container"><b>แก้ไขรูปภาพ</b></label>
+                        <div class="tooltip">
+                            <i class="fas fa-info-circle"></i>
+                        <span class="tooltiptext">ใช้สำหรับการเปลี่ยนรูปภาพของแมว</span>
+                        </div>
+                        </div>
+                        <div  style="display: flex; align-items: center; justify-content: center; padding-top: 20px">
+                            <div class="file-input-container">
+                                <input type="file" name="file" id="file">
+                            </div>
+                        </div>
+                    </div>
                     
                     <br>
                     <button type="submit" value="Submit">Submit</button>
@@ -325,37 +348,30 @@ function redirectToAdmin() {
 
 
 function lineSetting() {
-    fetch(`/notification`)
-    .then(response => response.json())
-    .then(data => {
-        const catSetting = document.getElementById('catSetting');
-        
-        // Dynamically generate forms for each item in the array
-        catSetting.innerHTML = data.map(cat => `
-            <div style="padding-top: 20px;" id="contrainnerSetting">
-                <form id="updateFormLine" action="/insertLine" method="post">
-                    <h3><b style="color: #512da8;">ตั้งค่าการแจ้งเตือน</b></h3>
-                    
-                    <label for="token-${cat.token}"><b>LineToken</b></label>                    
+    const catSetting = document.getElementById('catSetting');
+    catSetting.innerHTML = `
+        <div  style="padding-top: 20px;" id="contrainnerSetting">
+            <form id="updateFormLine" action="/insertLine" method="post">
+                <h3><b style="color: #512da8;">ตั้งค่าการแจ้งเตือน</b></h3>
+                    <label for="token"><b>LineToken</b></label>                    
                     <div class="tooltip">
-                        <i class="fas fa-info-circle"></i>
-                        <span class="tooltiptext">Token สำหรับรับการแจ้งเตือนผ่านแอพ Line</span>
+                        <i class="fas fa-info-circle"></i><span class="tooltiptext">Token สำหรับรับการแจ้งเตือนผ่านแอพ Line</span>
                     </div><br>
-                    <input type="text" id="token-${cat.token}" name="token" placeholder="LineToken" value="${cat.token}" required><br><br>
-                    
-                    <label for="hour-${cat.token}"><b>เวลาการแจ้งเตือนซ้ำ (ชั่วโมง)</b></label>                    
+                    <input type="text" id="token" name="token" placeholder="LineToken" required><br>
+                    <br>
+                    <label for="token"><b>เวลาการแจ้งเตือนซ้ำ (ชั่วโมง)</b></label>                    
                     <div class="tooltip">
-                        <i class="fas fa-info-circle"></i>
-                        <span class="tooltiptext">ใช้สำหรับการตั้งค่าเวลาสำหรับการแจ้งเตือนผ่านแอพ Line ซ้ำ</span>
+                        <i class="fas fa-info-circle"></i><span class="tooltiptext">ใช้สำหรับการตั้งค่าเวลาสำหรับการแจ้งเตือนผ่านแอพ Line ซ้ำ</span>
                     </div><br>
-                    <input type="number" id="hour-${cat.token}" name="hour" placeholder="hour" value="${cat.hour}" min="1" max="23" required><br><br>
+                    <input type="text" id="hour" name="hour" placeholder="hour" required><br>
+                    <br>
+                <button type="submit" value="Submit">Submit</button>
+                <button type="reset" onclick="redirectToSetting()">Cancel</button>
+            </form>
+        </div>
+    `;
     
-                    <button type="submit" value="Submit">Submit</button>
-                    <button type="reset" onclick="redirectToSetting()">Cancel</button>
-                </form>
-            </div>
-        `).join('');  // Join the array of HTML strings into one string
-    })
+
 }
 
 function tankSetting() {
@@ -364,7 +380,7 @@ function tankSetting() {
     .then(data => {
     const catSetting = document.getElementById('catSetting');
     catSetting.innerHTML = `
- <div style="padding-top: 20px;" id="contrainnerSetting">
+<div style="padding-top: 20px;" id="contrainnerSetting">
     <form id="updateFormTank" action="/insertTank" method="post">
         <h3><b style="color: #512da8;">ตั้งค่าถังอาหาร</b></h3>
 
@@ -376,8 +392,8 @@ function tankSetting() {
                     <span class="tooltiptext">ใช้สำหรับการเปลี่ยนชื่อถังอาหารที่ 1</span>
                 </div>
             </label><br>
-            <input type="text" id="Tank1" name="Tank1" placeholder="ตั้งค่าชื่อถังอาหารที่ 1" value="${data[0].name_tank}" required><br>
-            <label for="percenTank1"><b>ตั้งค่าการแจ้งเตือนถังอาหารที่ 1</b>
+            <input type="text" id="Tank1" name="Tank1" placeholder="Rename tank1" value="${data[0].name_tank}" required><br>
+            <label for="percenTank1"><b>ตั้งค่าการแจ้งเตือน ${data[0].name_tank}b>
                 <div class="tooltip">
                     <i class="fas fa-info-circle"></i>
                     <span class="tooltiptext">ใช้สำหรับการตั้งค่าการแจ้งเตือนเมื่อปริมาณอาหารในถัง ${data[0].name_tank} ต่ำกว่าร้อยละ (0-90) % ที่กำหนด</span>
@@ -385,7 +401,7 @@ function tankSetting() {
             </label><br>
             <input type="number" id="percenTank1" name="percenTank1" placeholder="ร้อยละ" value="${data[0].notification_percen}" min="10" max="90" required><br>
         </div>
-    <label for="percenTank1"><b>ตั้งค่าถังที่ 2</b> </label>
+        <label for="percenTank1"><b>ตั้งค่าถังที่ 2</b> </label>
         <div style="border: 1px solid #666; padding: 15px; margin-bottom: 20px; padding-top: 30px;">
             <label for="Tank2"><b>ตั้งค่าชื่อถังอาหารที่ 2</b>
                 <div class="tooltip">
@@ -393,9 +409,9 @@ function tankSetting() {
                     <span class="tooltiptext">ใช้สำหรับการเปลี่ยนชื่อถังอาหารที่ 2</span>
                 </div>
             </label><br>
-            <input type="text" id="Tank2" name="Tank2" placeholder="ตั้งค่าชื่อถังอาหารที่ 2" value="${data[1].name_tank}" required><br>
+            <input type="text" id="Tank2" name="Tank2" placeholder="Rename tank2" value="${data[1].name_tank}" required><br>
             
-            <label for="percenTank2"><b>ตั้งค่าการแจ้งเตือนถังอาหารที่ 2</b>
+            <label for="percenTank2"><b>แจ้งเตือน ${data[1].name_tank}</b>
                 <div class="tooltip">
                     <i class="fas fa-info-circle"></i>
                     <span class="tooltiptext">ใช้สำหรับการตั้งค่าการแจ้งเตือนเมื่อปริมาณอาหารในถัง ${data[1].name_tank} ต่ำกว่าร้อยละ (0-90) % ที่กำหนด</span>
@@ -422,6 +438,9 @@ function resetStatusToFalse() {
     .then(data => {
         alert(data.message || 'Update status successfully');
     })
+    .catch((error) => {
+        alert('Update status Failed');
+    });
     redirectToAdmin()
 }
 
@@ -436,6 +455,9 @@ function resetStatusToTrue() {
     .then(data => {
         alert(data.message || 'Update status successfully');
     })
+    .catch((error) => {
+        alert('Update status Failed');
+    });
     redirectToAdmin()
 }
 

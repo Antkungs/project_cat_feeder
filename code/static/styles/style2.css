@@ -8,14 +8,26 @@ i{
   color: #666;
   opacity: 30%;
 }
-
 .line-time{
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 10px;
 }
+.file-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+#file {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+}
 .line{
   border: 1px solid #666;
   padding: 15px;
@@ -195,7 +207,7 @@ button:hover::before {
 
 }
 @media screen and (max-width: 1440px) { 
-
+ 
 }
 
 @media screen and (max-width: 1024px) { 

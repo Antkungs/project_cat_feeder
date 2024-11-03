@@ -95,8 +95,6 @@ def switchOnPlace3():
 def servoFood():
     sleep(2)
     try:
-        led3 = OutputDevice(17)
-        led3.off()
         servo_pwm = PWMOutputDevice(12)
         led3.on()
         servo_pwm.value = 0.05
@@ -112,15 +110,16 @@ def servoFood():
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        led3.off()
         servo_pwm.close()
-        led3.close()
+    
         print("Servo Ending")
 
 led1 = OutputDevice(22)
 led1.off()
 led2 = OutputDevice(27)
 led2.off()
+led3 = OutputDevice(17)
+led3.off()
 switch1 = Button(20, bounce_time=0.1) 
 switch1.when_released  = switchOnPlace1
 switch2 = Button(21, bounce_time=0.1) 
@@ -174,7 +173,7 @@ def loadRange(select_value,range_value):
                 device = motor_map.get(device_name)
 
                 led_name = f"{id_tank}"
-                leds = led_select.get(led_name)
+                #leds = led_select.get(led_name)
                 food_give = convert_to_float(food_give)
                 while True:
                     if ser.in_waiting > 0:
@@ -182,16 +181,16 @@ def loadRange(select_value,range_value):
                         number = convert_to_float(data)
                         print(number)
                         if number is not None:
-                            leds.on()
+                            #leds.on()
                             print("motor run")
                             current_time = time.time()
                             if current_time >= end_time:
-                                leds.off()
+                                #leds.off()
                                 device.value = 0
                                 print("motor stop")
                                 break
                             elif number >= food_give * 0.97:
-                                leds.off()
+                                #leds.off()
                                 device.value = 0
                                 print("motor stop")
                                 break
@@ -260,8 +259,8 @@ def swLoadCell(jasonCatInformation):
                 device_name = f"{id_tank}"
                 device = motor_map.get(device_name)
 
-                led_name = f"{id_tank}"
-                leds = led_select.get(led_name)
+                #led_name = f"{id_tank}"
+                #leds = led_select.get(led_name)
                 food_give = convert_to_float(food_give)
                 while True:
                     if ser.in_waiting > 0:
@@ -270,11 +269,11 @@ def swLoadCell(jasonCatInformation):
                         number = convert_to_float(data)
                         print(number)
                         if number is not None:
-                            leds.on()
+                            #leds.on()
                             print("motor run")
                             current_time = time.time()
                             if current_time >= end_time:
-                                leds.off()
+                                #leds.off()
                                 jasonCatInformation = {
                                     'idCat': id_cats,
                                     'nameCat': names,
@@ -293,7 +292,7 @@ def swLoadCell(jasonCatInformation):
                                     current_time = time.time()
                                     print(number)
                                     if current_time >= breakLoad:
-                                        leds.off()
+                                        #leds.off()
                                         jasonCatInformation = {
                                             'idCat': id_cats,
                                             'nameCat': names,
@@ -368,8 +367,8 @@ def loadCell(jasonCatInformation):
                 device_name = f"{id_tank}"
                 device = motor_map.get(device_name)
 
-                led_name = f"{id_tank}"
-                leds = led_select.get(led_name)
+                #led_name = f"{id_tank}"
+                #leds = led_select.get(led_name)
                 data = ser.readline().decode('utf-8').rstrip()
                 number = convert_to_float(data)
                 time.sleep(3) 
@@ -379,11 +378,11 @@ def loadCell(jasonCatInformation):
                         number = convert_to_float(data)
                         print(number)
                         if number is not None:
-                            leds.on()
+                            #leds.on()
                             print("motor run")
                             current_time = time.time()
                             if current_time >= end_time:
-                                leds.off()
+                                #leds.off()
                                 jasonCatInformation = {
                                     'idCat': id_cats,
                                     'nameCat': names,
@@ -402,7 +401,7 @@ def loadCell(jasonCatInformation):
                                     current_time = time.time()
                                     print(number)
                                     if current_time >= breakLoad:
-                                        leds.off()
+                                        #leds.off()
                                         jasonCatInformation = {
                                             'idCat': id_cats,
                                             'nameCat': names,
@@ -519,18 +518,25 @@ def initialize_sensors():
     vl53_1 = VL53L0X(i2c, address=0x29) # ถัง 1
     vl53_1.set_address(0x2A)
     print("setup sensor 1")
+    led1.on()
     time.sleep(0.5)
     GPIO.output(15, 1)
     time.sleep(0.5)
     vl53_2 = VL53L0X(i2c, address=0x29) # ถัง 2
     vl53_2.set_address(0x2B)
     print("setup sensor 2")
+    led2.on()
     time.sleep(0.5)
     GPIO.output(18, 1)
     time.sleep(0.5)
     vl53_3 = VL53L0X(i2c, address=0x29) # ถังเศษอาหาร
     vl53_3.set_address(0x2C)
     print("setup sensor 3")
+    led3.on()
+    time.sleep(1)
+    led1.off()
+    led2.off()
+    led3.off()
     return vl53_1, vl53_2, vl53_3
 
 def getData():
@@ -657,7 +663,9 @@ def mainHw():
                 if x > Notification['x']:
                     status['x'] = False
                     xfuture_time = None
+                    led1.off()
                 if x <= Notification['x']:
+                    led1.on()
                     if Notification['x'] >= x and status['x'] == False:
                         status['x'] = True
                         current_time = datetime.datetime.now()
@@ -672,7 +680,9 @@ def mainHw():
                 if Notification['y'] < y:
                     status['y'] = False
                     yfuture_time = None
+                    led2.off()
                 if Notification['y'] >= y:
+                    led2.on()
                     if Notification['y'] >= y and status['y'] == False:
                         status['y'] = True
                         current_time = datetime.datetime.now()
@@ -687,7 +697,9 @@ def mainHw():
                 if Notification['z'] > z:
                     status['z'] = False
                     zfuture_time = None
+                    led3.off()
                 if Notification['z'] <= z:
+                    led3.on()
                     if Notification['z'] <= z and status['z'] == False:
                         status['z'] = True
                         current_time = datetime.datetime.now()

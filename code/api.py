@@ -1,3 +1,4 @@
+import os
 import socket
 import cv2
 import time
@@ -216,62 +217,90 @@ def checkTime(stime_1, etime_1, stime_2, etime_2, stime_3, etime_3):
     
     return True, None
 
+UPLOAD_FOLDER = r'/home/antkung/Desktop/project_cat_feeder/code/static/images'  # Adjust the path if needed
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/insertData/<id_cat>', methods=['POST'])
 def insert_data(id_cat):
     if request.method == 'POST':
-        # ดึงข้อมูลจากฟอร์ม
-        name = request.form['name']
-        food_quantity = request.form['food_quantity']
-        stime_1 = request.form['stime_1']
-        etime_1 = request.form['etime_1']
-        stime_2 = request.form['stime_2']
-        etime_2 = request.form['etime_2']
-        stime_3 = request.form['stime_3']
-        etime_3 = request.form['etime_3']
-        tank = request.form['tank']
-        
-        is_valid, error_message = checkTime(stime_1, etime_1, stime_2, etime_2, stime_3, etime_3)
-        
-        if not is_valid:
-            return f"""
-            <script>
-                alert('Error: {error_message}');
-                window.location.href = '/setting';
-            </script>
-            """
-        
-        # Connect to the database
-        db = connect()
-        cursor = db.cursor()
-        sql = """
-            UPDATE `catinformation` 
-            SET `name_cat` = %s, `food_give` = %s, `time1_start` = %s, `time1_end` = %s, 
-                `time2_start` = %s, `time2_end` = %s, `time3_start` = %s, `time3_end` = %s, 
-                `id_tank` = %s 
-            WHERE id_cat = %s
-        """
-        values = (name, food_quantity, stime_1, etime_1, stime_2, etime_2, stime_3, etime_3, tank, id_cat)
-        
         try:
+            # Fetch data from the form
+            name = request.form['name']
+            food_quantity = request.form['food_quantity']
+            stime_1 = request.form['stime_1']
+            etime_1 = request.form['etime_1']
+            stime_2 = request.form['stime_2']
+            etime_2 = request.form['etime_2']
+            stime_3 = request.form['stime_3']
+            etime_3 = request.form['etime_3']
+            tank = request.form['tank']
+            
+            # Time validation
+            is_valid, error_message = checkTime(stime_1, etime_1, stime_2, etime_2, stime_3, etime_3)
+            if not is_valid:
+                return f"""
+                <script>
+                    alert('Error: {error_message}');
+                    window.location.href = '/setting';
+                </script>
+                """
+            
+            # Database connection
+            db = connect()
+            cursor = db.cursor()
+            
+            # Get existing image URL
+            cursor.execute("SELECT image_url FROM catinformation WHERE id_cat = %s", (id_cat,))
+            existing_image = cursor.fetchone()
+            old_image_url = existing_image[0] if existing_image else None
+            
+            # Handle file upload
+            new_image_url = old_image_url  # Default to old image
+            if 'file' in request.files and request.files['file'].filename != '':
+                file = request.files['file']
+                if allowed_file(file.filename):
+                    filename = f"cat{id_cat}.jpg"  # Rename the file to cat{id_cat}.jpg
+                    new_image_url = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(new_image_url)
+                    print(f"Image saved to {new_image_url}")  # Debugging output
+            
+            # Prepare SQL command
+            sql = """
+                UPDATE `catinformation` 
+                SET `name_cat` = %s, `food_give` = %s, 
+                    `time1_start` = %s, `time1_end` = %s, 
+                    `time2_start` = %s, `time2_end` = %s, 
+                    `time3_start` = %s, `time3_end` = %s, 
+                    `id_tank` = %s, `image_url` = %s
+                WHERE id_cat = %s
+            """
+            values = (name, food_quantity, stime_1, etime_1, stime_2, etime_2, stime_3, etime_3, tank, new_image_url, id_cat)
+            
             # Execute SQL command
             cursor.execute(sql, values)
-            # Commit changes
             db.commit()
             return """
             <script>
                 alert('Update Successfully');
-                window.location.href = '/setting';
+                window.location.href = '/';
             </script>
             """
         except Exception as e:
-            # Rollback in case of error
-            db.rollback()
+            if db.is_connected():
+                db.rollback()
+            print(f"Error occurred: {e}")  # Log error to console
             return f"""
             <script>
                 alert('Error: {e}');
                 window.location.href = '/setting';
             </script>
             """
+
     
         
        
@@ -530,6 +559,7 @@ def get_cat_info(cat_name):
     else:
         return jsonify({"error": "Cat not found"})
 
+
 #ข้อมูลของแมว
 @app.route('/catinformation', methods=['GET'])
 def get_catinformation():
@@ -555,6 +585,7 @@ def get_catinformation():
                     'time1_status': x[10],
                     'time2_status': x[11],
                     'time3_status': x[12],
+                    'img_path': x[13],
                 }
                 results.append(converted_data)
             return jsonify(results)  # ส่งคืนในรูปแบบ JSON
@@ -787,10 +818,58 @@ def lineTest():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/cat_detection', methods=['POST'])
+def add_cat_detection():
+    data = request.get_json()
+    
+    # Check that required fields are provided
+    if 'idcatfound' not in data or 'conf' not in data:
+        return jsonify({"error": "Missing idcatfound or conf"}), 400
+
+    idcatfound = data['idcatfound']
+    conf = data['conf']
+    detected_at = data.get('detected_at', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
+    print(f"Received data - detected_at: {detected_at}, idcatfound: {idcatfound}, conf: {conf}")  # Debugging output
+
+    db = connect()
+    cursor = db.cursor()
+    
+    # Define the SQL query
+    query = """
+    INSERT INTO `cat_detection` (`detected_at`, `idcatfound`, `conf`)
+    VALUES (%s, %s, %s)
+    ON DUPLICATE KEY UPDATE
+    conf = VALUES(conf), detected_at = VALUES(detected_at);
+    """
+    
+    try:
+        # Execute the query with the values in a tuple
+        cursor.execute(query, (detected_at, idcatfound, conf))
+        db.commit()
+
+        # Check the number of rows affected
+        affected_rows = cursor.rowcount
+        print(f"Rows affected: {affected_rows}")  # Debugging output
+
+        if affected_rows == 0:
+            print("No new records were inserted or updated.")  # More debugging
+
+        return jsonify({"message": "Cat detection saved successfully!"}), 200
+    except Exception as e:
+        db.rollback()  # Rollback in case of error
+        print(f"SQL Error: {str(e)}")  # Log the error for debugging
+        return jsonify({"error": str(e)}), 500
+    finally:
+        # Close database connection
+        cursor.close()
+        db.close()
+
+
 def detect():
     global frame2 , current_time , haveEat
-    model = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/catver1.2.pt")
-    model2 = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/classver4.pt") #model หาแมว
+    model = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/catver0.2.pt")
+    model2 = YOLO(r"/home/antkung/Desktop/project_cat_feeder/code/model/best.pt") #model หาแมว
     cap = cv2.VideoCapture(0)
     current_time = time.time()
     updated_time = current_time + 5
@@ -803,25 +882,23 @@ def detect():
         ret, frame = cap.read()
         if not ret:
             break
-
-        frame_counter += 1
-        if frame_counter % skip_frame_count != 0:  # Skip the frame unless it's every nth frame
-            continue
-
-        result1 = model(frame,conf=0.6,classes=15)
+        result1 = model(frame,conf=0.6,classes=15) #classes = 15
         try:  
-            print(haveEat)
-            print(f'find cat {findCat1} {updated_time}')
+            print(f"กำลังกิน : {haveEat}")
             #ตีกรอบแมวธรรมดา
-            for r in result1:
-                annotator = Annotator(frame)    
-                boxes = r.boxes
-                for box in boxes:        
-                    b = box.xyxy[0]
-                    c = box.cls
-                    annotator.box_label(b, model.names[int(c)]) 
-            frame = annotator.result() 
-            current_time = time.time()
+            for result in result1:
+                boxes = result.boxes  # Bounding boxes for detected objects
+
+                for box in boxes:
+                    x1, y1, x2, y2 = map(int, box.xyxy[0])  # Get bounding box coordinates
+                    conf = box.conf[0]  # Confidence score
+                    cls = int(box.cls[0])  # Class id
+                    label = f"{model.names[cls]} {conf:.2f}"  # Class name and confidence score
+
+                    # Draw the bounding box and label on the frame
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    current_time = time.time()
             #print(result1[0].boxes.conf)
             if(result1[0].boxes.cls.tolist().count(25) > 1): #เช็คแมวว่ามี > 1 ตัว
                 print("เจอแมวมากกว่า 1 ตัว")
@@ -835,43 +912,62 @@ def detect():
                     # Check if the timer has passed 2 seconds after detecting 1 cat
                 elif findCat1 and updated_time and current_time >= updated_time: #เช็คแมวว่ามี 1 ตัว
                     result2 = model2(frame) 
+                    top_box = None  # เก็บ bounding box ที่มีค่า confidence สูงสุด
+                    max_conf = 0  # ค่า confidence สูงสุดเริ่มต้นเป็น 0
+                    top_label = ""  # ตัวแปรเพื่อเก็บ label ที่มีค่า confidence สูงสุด
+                    top_class_id = None  # ตัวแปรเพื่อเก็บ class ID ที่มี confidence สูงสุด
+
                     for result in result2:
-                        probs = result.probs  # Probs object for classification outputs
-                        selectCat = probs.top1+1
-                        print(selectCat)
-                        print(model2.names[selectCat-1])
-                        if(probs.top1conf > 0.7): #id classification
-                            filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
-                            cv2.imwrite(filename, frame)
-                            #line.send_image("temp.jpg", model2.names[probs.top1])
-                            jasonCatInformation = getTime(selectCat) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
-                            while haveEat:  
-                                current_time = time.time() 
-                                result1 = model(frame,conf=0.6,classes=15)
+                        if hasattr(result, 'boxes'):  # ตรวจสอบว่ามี attribute 'boxes' หรือไม่
+                            for box in result.boxes:
+                                class_id = int(box.cls)  # Get the class ID
+                                class_name = result.names[class_id]  # Get the class name from the model's 
+                                confidence = box.conf.item()  # แปลง confidence เป็น float โดยใช้ .item()
+
+                                # เช็คว่าค่า confidence สูงกว่าค่าที่บันทึกไว้หรือไม่
+                            if confidence > max_conf:
+                                max_conf = confidence
+                                top_box = box
+                                top_label = f"{class_name} {confidence:.2f}"
+                                top_class_id = class_id
+                    if confidence > 0.80:
+                        # แสดงผลเฉพาะการตรวจจับที่มั่นใจที่สุด
+                        print(f"Detected class ID: {top_class_id + 1}")  # +1 ถ้าคุณใช้ ID เริ่มต้นที่ 0
+                        print(f"Detected class name: {top_label.split()[0]}")  # พิมพ์ชื่อ class
+                        print(f"Confidence: {max_conf:.2f}") 
+                        current_time = datetime.now()  # สร้างวัตถุ datetime
+                        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+                        data = {
+                            "idcatfound": class_id+1,
+                            "conf": confidence,
+                            "detected_at": formatted_time
+                        }
+                        requests.post("http://localhost:3000/api/cat_detection", json=data)
+                        filename = "temp.jpg"  #ถ่ายภาพเพื่อเก็บสถานะไว้ส่งไปยังไลน์
+                        cv2.imwrite(filename, frame)
+                        #line.send_image("temp.jpg", model2.names[probs.top1])
+                        jasonCatInformation = getTime(top_class_id + 1) #เรียกใช้ API เพื่อดึงข้อมูลแมวตัวนั้นๆ และเช็คเวลา
+                        print(jasonCatInformation)
+                        while haveEat:   
+                                print(f"{top_class_id + 1} : {top_label.split()[0]} กำลังกิน :{haveEat}")
                                 ret, frame = cap.read()
-                                print(model2.names[selectCat-1])
-                                print('now eatting')
-                                frame2 = frame
                                 if not ret:          
                                     break
+                                result1 = model(frame)
+                                current_time = time.time() 
                                 if(result1[0].boxes.cls.tolist().count(15) >= 1):
                                     play_loop_time = current_time + 5
                                 elif(current_time > play_loop_time):
+                                    #hardwareSelect.loadFoodEnd(jasonCatInformation)
+                                    time.sleep(5)
+                                    #hardwareSelect.throwAwayFood()
+                                    print("สถานะ :  การกินเสร็จสิ้น")
                                     haveEat = False
-                                    try:
-                                        hardwareSelect.loadFoodEnd(jasonCatInformation)
-                                        print("a")
-                                    except Exception as e: 
-                                        print('error loadCell')                       
-                                    try:
-                                        servoFood()
-                                    except Exception as e:
-                                        print('error servo')
-                            current_time = time.time()
-                            updated_time = None
-                            findCat1 = False
-                        else:
-                            print("NOT SURE")
+                                    frame2 = frame
+                        current_time = time.time()
+                        updated_time = current_time + 5
+                    else:
+                        print("สถานะ :  เจอแมว 1 ตัว NOT SURE")
             else:
                 findCat1 = False
                 updated_time = None
@@ -890,10 +986,7 @@ def detect():
 def servoFood():
     sleep(2)
     try:
-        led3 = OutputDevice(17)
-        led3.off()
         servo_pwm = PWMOutputDevice(12)
-        led3.on()
         servo_pwm.value = 0.05
         sleep(1)
         servo_pwm.value = 0.16
@@ -907,9 +1000,7 @@ def servoFood():
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        led3.off()
         servo_pwm.close()
-        led3.close()
         print("Servo Ending")
 
 def getTime(select):

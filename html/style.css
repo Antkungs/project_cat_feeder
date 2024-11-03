@@ -1,0 +1,125 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden; /* Prevents scrollbars during the loader display */
+}
+
+/* Form Styles */
+form {
+    background: #fff;
+    padding: 2em;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px; /* Limit the form width */
+    box-sizing: border-box;
+}
+
+/* Header Styles */
+h1 {
+    margin-bottom: 1em;
+    font-size: 1.5em;
+    text-align: center;
+    color: #333;
+}
+
+/* Label Styles */
+label {
+    display: block;
+    margin-bottom: 0.5em;
+    color: #666;
+}
+
+/* Input Styles */
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 0.8em;
+    margin-bottom: 1em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+/* Submit Button Styles */
+input[type="submit"] {
+    width: 100%;
+    padding: 0.8em;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+#loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-text {
+    margin-bottom: 1em;
+    font-size: 1.2em;
+    color: #007bff;
+}
+
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.fading-bars {
+    display: flex;
+}
+
+.bar {
+    width: 8px;
+    height: 40px;
+    background-color: #007bff;
+    margin: 0 4px;
+    animation: fade 1.2s infinite ease-in-out;
+}
+
+.bar:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.bar:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.bar:nth-child(4) {
+    animation-delay: 0.6s;
+}
+
+.bar:nth-child(5) {
+    animation-delay: 0.8s;
+}
+
+@keyframes fade {
+    0%, 40%, 100% {
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+}
